@@ -1,0 +1,41 @@
+<div th:replace="~{header}"></div>
+
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <h3>Edit Children</h3>
+            <form th:action="@{/children/update}" th:object="${children}" method="post">
+                <input type="hidden" th:field="*{id}" />
+                <div class="mb-3">
+                    <label for="fullName" class="form-label">Full Name</label>
+                    <input type="text" class="form-control" id="fullName" th:field="*{fullName}" required>
+                </div>
+                <!-- <div class="mb-3">
+                    <label for="recordDate" class="form-label">Record Date</label>
+                    <input type="date" class="form-control" id="recordDate" name="recordDate" th:value="${growthRecord.recordDate}" th:readonly="true" required>
+                </div> -->
+                <div class="mb-3">
+                    <label for="birthDate" class="form-label">Birth Date</label>
+                    <input type="date" class="form-control" id="birthDate" 
+                           th:field="*{birthDate}"
+                           th:value="${#temporals.format(children.birthDate, 'yyyy-MM-dd')}"
+                           required>
+                </div>
+                <div class="mb-3">
+                    <label for="gender" class="form-label">Gender</label>
+                    <select class="form-control" id="gender" th:field="*{gender}" required>
+                        <option th:each="genderOpt : ${availableGenders}" th:value="${genderOpt}"
+                            th:text="${genderOpt.name()}" th:selected="${genderOpt == children.gender}">
+                        </option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">Update</button>
+                <a th:href="@{/children}" class="btn btn-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<div th:replace="~{footer}"></div>
