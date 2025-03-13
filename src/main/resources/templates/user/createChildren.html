@@ -1,32 +1,85 @@
 <div th:replace="~{header}"></div>
 
-
 <div class="container mb-3">
     <div class="row">
         <div class="col-md-12">
             <h3>Create Children</h3>
-            <form th:action="@{/children/create}" th:object="${children}" method="post">
+            <form id="createChildrenForm" onsubmit="handleSubmit(event)">
+                <input type="hidden" id="userId" th:value="${currentUser.id}">
+                
                 <div class="mb-3">
                     <label for="fullName" class="form-label">Full Name</label>
                     <input type="text" class="form-control" id="fullName" name="fullName" required>
                 </div>
+                
                 <div class="mb-3">
                     <label for="birthDate" class="form-label">Birth Date</label>
                     <input type="date" class="form-control" id="birthDate" name="birthDate" required>
                 </div>
+                
                 <div class="mb-3">
                     <label for="gender" class="form-label">Gender</label>
                     <select class="form-control" id="gender" name="gender" required>
-                        <option th:each="genderOpt : ${availableGenders}" th:value="${genderOpt}"
-                            th:text="${genderOpt.name()}" th:selected="${genderOpt == children.gender}">
-                        </option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
                     </select>
                 </div>
+                
                 <button type="submit" class="btn btn-primary">Create</button>
+                <a href="/children" class="btn btn-secondary">Cancel</a>
             </form>
         </div>
     </div>
 </div>
 
+<script>
+// CSRF setup
+let csrfToken, csrfHeader;
+try {
+    csrfToken = document.querySelector("meta[name='_csrf']")?.content || '';
+    csrfHeader = document.querySelector("meta[name='_csrf_header']")?.content || 'X-CSRF-TOKEN';
+} catch (e) {
+    console.warn('CSRF meta tags not found');
+    csrfToken = '';
+    csrfHeader = 'X-CSRF-TOKEN';
+}
+
+async function handleSubmit(event) {
+    event.preventDefault();
+    
+    const formData = {
+        fullName: document.getElementById('fullName').value,
+        birthDate: document.getElementById('birthDate').value,
+        gender: document.getElementById('gender').value,
+        userId: document.getElementById('userId').value
+    };
+
+    try {
+        const response = await fetch('/api/children', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                [csrfHeader]: csrfToken
+            },
+            body: JSON.stringify(formData)
+        });
+
+        if (!response.ok) {
+            const errorData = await response.text();
+            console.error('Server response:', errorData);
+            throw new Error('Failed to create child');
+        }
+
+        window.location.href = '/children';
+    } catch (error) {
+        console.error('Error:', error);
+        showError('Failed to create child');
+    }
+}
+
+function showError(message) {
+    alert(message); // Replace with your preferred notification system
+}
+</script>
 
 <div th:replace="~{footer}"></div>

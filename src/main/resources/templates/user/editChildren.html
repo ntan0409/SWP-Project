@@ -1,41 +1,110 @@
 <div th:replace="~{header}"></div>
 
-
 <div class="container mb-3">
     <div class="row">
         <div class="col-md-12">
             <h3>Edit Children</h3>
-            <form th:action="@{/children/update}" th:object="${children}" method="post">
-                <input type="hidden" th:field="*{id}" />
+            <form id="editChildrenForm" onsubmit="handleSubmit(event)">
+                <input type="hidden" id="childId" th:value="${childrenId}">
+                <input type="hidden" id="userId" th:value="${currentUser.id}">
                 <div class="mb-3">
                     <label for="fullName" class="form-label">Full Name</label>
-                    <input type="text" class="form-control" id="fullName" th:field="*{fullName}" required>
+                    <input type="text" class="form-control" id="fullName" name="fullName" required>
                 </div>
-                <!-- <div class="mb-3">
-                    <label for="recordDate" class="form-label">Record Date</label>
-                    <input type="date" class="form-control" id="recordDate" name="recordDate" th:value="${growthRecord.recordDate}" th:readonly="true" required>
-                </div> -->
+                
                 <div class="mb-3">
                     <label for="birthDate" class="form-label">Birth Date</label>
-                    <input type="date" class="form-control" id="birthDate" 
-                           th:field="*{birthDate}"
-                           th:value="${#temporals.format(children.birthDate, 'yyyy-MM-dd')}"
-                           required>
+                    <input type="date" class="form-control" id="birthDate" name="birthDate" required>
                 </div>
+                
                 <div class="mb-3">
                     <label for="gender" class="form-label">Gender</label>
-                    <select class="form-control" id="gender" th:field="*{gender}" required>
-                        <option th:each="genderOpt : ${availableGenders}" th:value="${genderOpt}"
-                            th:text="${genderOpt.name()}" th:selected="${genderOpt == children.gender}">
-                        </option>
+                    <select class="form-control" id="gender" name="gender" required>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
                     </select>
                 </div>
+                
                 <button type="submit" class="btn btn-primary">Update</button>
-                <a th:href="@{/children}" class="btn btn-secondary">Cancel</a>
+                <a href="/children" class="btn btn-secondary">Cancel</a>
             </form>
         </div>
     </div>
 </div>
 
+<script>
+let csrfToken, csrfHeader;
+try {
+    csrfToken = document.querySelector("meta[name='_csrf']")?.content || '';
+    csrfHeader = document.querySelector("meta[name='_csrf_header']")?.content || 'X-CSRF-TOKEN';
+} catch (e) {
+    console.warn('CSRF meta tags not found');
+    csrfToken = '';
+    csrfHeader = 'X-CSRF-TOKEN';
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+    const childId = document.getElementById('childId').value;
+    await loadChildData(childId);
+});
+
+async function loadChildData(childId) {
+    try {
+        const response = await fetch(`/api/children/${childId}`);
+        if (!response.ok) throw new Error('Failed to fetch child data');
+        const child = await response.json();
+        
+        document.getElementById('fullName').value = child.fullName;
+        document.getElementById('birthDate').value = child.birthDate;
+        document.getElementById('gender').value = child.gender;
+    } catch (error) {
+        console.error('Error:', error);
+        showError('Failed to load child data');
+    }
+}
+
+async function handleSubmit(event) {
+    event.preventDefault();
+    const childId = document.getElementById('childId').value;
+    
+    const formData = {
+        id: childId,
+        fullName: document.getElementById('fullName').value,
+        birthDate: document.getElementById('birthDate').value,
+        gender: document.getElementById('gender').value,
+        userId: document.getElementById('userId').value
+    };
+
+    console.log('Sending data:', formData);
+
+    try {
+        const response = await fetch(`/api/children/${childId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                [csrfHeader]: csrfToken
+            },
+            body: JSON.stringify(formData)
+        });
+
+        if (!response.ok) {
+            const errorData = await response.text();
+            console.error('Server response:', errorData);
+            throw new Error(`Failed to update child: ${errorData}`);
+        }
+        
+        window.location.href = '/children';
+    } catch (error) {
+        console.error('Error:', error);
+        showError(error.message);
+    }
+}
+
+
+function showError(message) {
+    alert(message); // Replace with your preferred notification system
+}
+
+</script>
 
 <div th:replace="~{footer}"></div>

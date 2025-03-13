@@ -6,6 +6,8 @@ import lombok.*;
 
 import java.time.LocalDate;
 
+import org.springframework.format.annotation.DateTimeFormat;
+
 
 @Entity
 @Table(name = "feedback")
@@ -18,8 +20,9 @@ public class FeedBack {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    @Column(name = "user_id", nullable = false)
-    private Long userId;
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
     
     @Column(nullable = false)
     private Integer rating;
@@ -27,6 +30,7 @@ public class FeedBack {
     @Column
     private String comment;
     
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
     @Column(name = "created_at", updatable = false)
     private LocalDate createdAt;
     

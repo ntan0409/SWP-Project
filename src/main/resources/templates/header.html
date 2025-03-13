@@ -56,16 +56,26 @@
                     <li class="nav-item">
                         <a class="nav-link" th:classappend="${page == 'children' ? 'active' : ''}" href="/children">Children</a>
                     </li>   
+                    <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                        <a class="nav-link" th:classappend="${page == 'manageUsers' ? 'active' : ''}" href="/manageUsers">
+                            Manage
+                        </a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasRole('DOCTOR')">
+                        <a class="nav-link" th:classappend="${page == 'manageConsultations' ? 'active' : ''}" href="/manageConsultations">
+                            Consultations
+                        </a>
+                    </li>
                     <li class="nav-item" sec:authorize="isAuthenticated()">
                         <a class="nav-link" th:classappend="${page == 'profile' or page == 'profile-update' or page == 'profile-changepass' ? 'active' : ''}" href="/profile">
                             Hi, <span class="" sec:authentication="name"></span> 
                         </a>
                     </li>
-                    <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                    <!-- <li class="nav-item" sec:authorize="hasRole('ADMIN')">
                         <a class="nav-link text-danger" th:classappend="${page == 'manageUsers' ? 'active' : ''}" href="/manageUsers">
                             Manage
                         </a>
-                    </li>
+                    </li> -->
                 </ul>
                 
                 <!-- Kiểm tra nếu đã đăng nhập -->

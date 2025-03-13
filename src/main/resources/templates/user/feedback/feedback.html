@@ -73,6 +73,7 @@
         font-size: 2rem;
         margin-bottom: 1rem;
     }
+
 </style>
 
 <div class="container mt-5">
@@ -82,7 +83,7 @@
                 😊
             </div>
             <h3 class="rating-title">How was your experience?</h3>
-            <form id="feedbackForm" action="/feedback/submit" method="POST" onsubmit="return validateFeedback()">
+            <form id="feedbackForm" onsubmit="submitFeedback(event)">
                 <div class="star-rating">
                     <input type="radio" id="star5" name="rating" value="5">
                     <label for="star5" class="fas fa-star"></label>
@@ -97,22 +98,20 @@
                 </div>
 
                 <div class="rating-feedback">
-                    <textarea class="form-control" id="comment" name="comment" rows="5"
-                        placeholder="Tell us about your experience (optional)"></textarea>
+                    <textarea class="form-control" id="comment" name="comment" rows="5" placeholder="Tell us about your experience (optional)"></textarea>
                 </div>
 
                 <!-- Thêm chỗ hiển thị lỗi -->
                 <p id="error-message" style="color: red; display: none;"></p>
 
-                <button type="submit" class="submit-rating btn">
+                <button type="submit" class="submit-rating">
                     Submit Rating
                 </button>
             </form>
         </div>
 
-
         <!-- Thêm Swiper Container -->
-        <div class="container mt-5">
+        <div id="feedbackList" class="container mt-5">
             <h3 class="text-center">List Feedback</h3>
             
             <!-- Carousel wrapper -->
@@ -168,9 +167,7 @@
                 </div>
             </div>
             <!-- Carousel wrapper -->
-
         </div>
-
     </div>
 </div>
 
@@ -181,7 +178,11 @@
 <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
 
 <script>
-    function validateFeedback() {
+
+
+    function submitFeedback(event) {
+        event.preventDefault(); // Ngăn chặn form submit mặc định
+
         var ratingChecked = document.querySelector('input[name="rating"]:checked');
         var comment = document.getElementById("comment").value.trim();
         var errorMessage = document.getElementById("error-message");
@@ -199,6 +200,120 @@
         }
 
         errorMessage.style.display = "none";
-        return true;
+
+        // Tạo object feedback
+        var feedback = {
+            rating: ratingChecked.value,
+            comment: comment
+        };
+
+        // Gửi feedback qua API
+        fetch('/api/feedbacks', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{_csrf.token}}' // Thêm CSRF token nếu cần
+            },
+            body: JSON.stringify(feedback)
+        })
+        .then(response => {
+            if (response.ok) {
+                return response.json();
+            } else {
+                throw new Error('Failed to submit feedback');
+            }
+        })
+        .then(data => {
+            // Xử lý kết quả trả về
+            alert('Feedback submitted successfully!');
+            // Gọi lại API để lấy danh sách feedback mới nhất
+            fetchFeedbacks();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to submit feedback. Please try again.');
+        });
     }
+
+    // Hàm để gọi API và lấy danh sách feedback
+    function fetchFeedbacks() {
+        fetch('/api/feedbacks')
+            .then(response => response.json())
+            .then(data => {
+                // Render lại toàn bộ danh sách feedback
+                renderFeedbackList(data);
+            })
+            .catch(error => {
+                console.error('Error fetching feedbacks:', error);
+            });
+    }
+
+    // Hàm để render lại danh sách feedback
+    function renderFeedbackList(feedbacks) {
+        var feedbackList = document.getElementById('feedbackList');
+        feedbackList.innerHTML = ''; // Xóa nội dung cũ
+
+        // Tạo HTML mới cho danh sách feedback
+        var html = `
+            <h3 class="text-center">List Feedback</h3>
+            <div id="carouselMultiItemExample" data-mdb-carousel-init class="carousel slide carousel-dark text-center" data-mdb-ride="carousel">
+                <div class="carousel-inner py-4">
+        `;
+
+        // Nhóm feedback thành các nhóm 3 phần tử
+        for (let i = 0; i < feedbacks.length; i += 3) {
+            var group = feedbacks.slice(i, i + 3);
+            html += `
+                <div class="carousel-item ${i === 0 ? 'active' : ''}">
+                    <div class="container">
+                        <div class="row justify-content-center">
+            `;
+
+            group.forEach(feedback => {
+                html += `
+                    <div class="col-lg-4">
+                        <img src="/images/avatar/${feedback.user.avatar || 'default.png'}" class="rounded-circle shadow-1-strong" width="100" height="100" alt="User Avatar" />
+                        <h5 class="mb-3">${feedback.user.fullName}</h5>
+                        <h6 class="text-primary">${new Date(feedback.createdAt).toLocaleDateString()}</h6>
+                        <p class="text-muted">
+                            <i class="fas fa-quote-left pe-2"></i>
+                            <span>${feedback.comment}</span>
+                        </p>
+                        <ul class="list-unstyled d-flex justify-content-center mb-0">
+                            ${Array.from({ length: feedback.rating }, () => '<li><i class="fas fa-star fa-sm text-warning"></i></li>').join('')}
+                        </ul>
+                    </div>
+                `;
+            });
+
+            html += `
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        html += `
+                </div>
+                <!-- Controls -->
+                <div class="d-flex justify-content-center mb-4">
+                    <button data-mdb-button-init class="carousel-control-prev position-relative" type="button"
+                        data-mdb-target="#carouselMultiItemExample" data-mdb-slide="prev">
+                        <span class="carousel-control-prev-icon text-body" aria-hidden="true"></span>
+                        <span class="visually-hidden">Previous</span>
+                    </button>
+                    <button data-mdb-button-init class="carousel-control-next position-relative" type="button"
+                        data-mdb-target="#carouselMultiItemExample" data-mdb-slide="next">
+                        <span class="carousel-control-next-icon text-body" aria-hidden="true"></span>
+                        <span class="visually-hidden">Next</span>
+                    </button>
+                </div>
+            </div>
+        `;
+
+        feedbackList.innerHTML = html; // Cập nhật nội dung mới
+    }
+
+    // Gọi hàm fetchFeedbacks khi trang được tải
+    document.addEventListener('DOMContentLoaded', fetchFeedbacks);
 </script>
