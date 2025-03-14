@@ -5,6 +5,8 @@ import lombok.*;
 
 import java.time.LocalDate;
 
+import org.springframework.format.annotation.DateTimeFormat;
+
 import com.example.Child.Growth.Tracking.ulti.Gender;
 
 @Entity
@@ -25,6 +27,7 @@ public class Children {
     private String fullName;
 
     @Column(name = "birth_date", nullable = false)
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate birthDate;
 
     @Enumerated(EnumType.STRING)

@@ -146,5 +146,35 @@ public class AuthController {
         boolean exists = userService.existsByPhone(phone);
         return Collections.singletonMap("available", !exists);
     }
-    
+
+    @GetMapping("/check-username-edit")
+    @ResponseBody
+    public Map<String, Boolean> checkUsernameForEdit(
+        @RequestParam String username,
+        @RequestParam Long userId) {
+        boolean exists = userService.existsByUsernameAndIdNot(username, userId);
+        return Collections.singletonMap("available", !exists);
+    }
+
+    @GetMapping("/check-email-edit")
+    @ResponseBody
+    public Map<String, Boolean> checkEmailForEdit(
+        @RequestParam String email,
+        @RequestParam Long userId) {
+        boolean exists = userService.existsByEmailAndIdNot(email, userId);
+        return Collections.singletonMap("available", !exists);
+    }
+
+    @GetMapping("/check-phone-edit")
+    @ResponseBody
+    public Map<String, Boolean> checkPhoneForEdit(
+        @RequestParam String phone,
+        @RequestParam Long userId) {
+        boolean exists = userService.existsByPhoneNumberAndIdNot(phone, userId);
+        return Collections.singletonMap("available", !exists);
+    }
+    @GetMapping("/forgot-password")
+    public String showForgotPasswordPage() {
+        return "forgotPassword";
+    }
 }
