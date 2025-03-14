@@ -4,7 +4,67 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="3ae7c3d2-9d7d-4534-9ef5-359a372ce4f6" name="Changes" comment="" />
+    <list default="true" id="3ae7c3d2-9d7d-4534-9ef5-359a372ce4f6" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/Child/Growth/Tracking/Api/Admin/ApiConsultationController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/Child/Growth/Tracking/Api/Admin/AuthApiController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/Child/Growth/Tracking/Api/Admin/BlogApiController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/Child/Growth/Tracking/Api/Admin/FeedBackApiController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/Child/Growth/Tracking/Api/Admin/UserApiController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/Child/Growth/Tracking/Api/User/ChildrenApiController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/Child/Growth/Tracking/Api/User/ConsultationApiController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/Child/Growth/Tracking/Api/User/GrowthRecordApiController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/Child/Growth/Tracking/ChildGrowthTrackingApplication.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/Child/Growth/Tracking/Controller/Admin/AdminConsultationController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/Child/Growth/Tracking/Controller/Admin/ManagerBlogsController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/Child/Growth/Tracking/Controller/Admin/ManagerFeedbacksController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/Child/Growth/Tracking/Controller/Admin/ManagerUsersController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/Child/Growth/Tracking/Controller/AuthController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/Child/Growth/Tracking/Controller/ForgotPasswordController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/Child/Growth/Tracking/Controller/User/BlogController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/Child/Growth/Tracking/Controller/User/ChildrenController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/Child/Growth/Tracking/Controller/User/ConsultationController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/Child/Growth/Tracking/Controller/User/FeedbackController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/Child/Growth/Tracking/Controller/User/GrowthRecordController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/Child/Growth/Tracking/Controller/User/UserController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/Child/Growth/Tracking/Model/BlogPost.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/Child/Growth/Tracking/Model/Children.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/Child/Growth/Tracking/Model/Consultations.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/Child/Growth/Tracking/Model/FeedBack.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/Child/Growth/Tracking/Model/GrowthRecords.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/Child/Growth/Tracking/Model/Health.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/Child/Growth/Tracking/Model/User.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/Child/Growth/Tracking/Repository/BlogRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/Child/Growth/Tracking/Repository/ChildrenRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/Child/Growth/Tracking/Repository/ConsultationRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/Child/Growth/Tracking/Repository/FeedBackRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/Child/Growth/Tracking/Repository/GrowthRecordsRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/Child/Growth/Tracking/Repository/UserRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/Child/Growth/Tracking/Security/JwtUtil.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/Child/Growth/Tracking/Service/BlogService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/Child/Growth/Tracking/Service/ChildrenService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/Child/Growth/Tracking/Service/ConsultationService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/Child/Growth/Tracking/Service/CustomUserDetailsService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/Child/Growth/Tracking/Service/EmailService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/Child/Growth/Tracking/Service/FeedBackService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/Child/Growth/Tracking/Service/GrowthRecordService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/Child/Growth/Tracking/Service/UserService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/Child/Growth/Tracking/configuation/SecurityConfig.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/Child/Growth/Tracking/configuation/WebConfig.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/Child/Growth/Tracking/ulti/AlertType.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/Child/Growth/Tracking/ulti/CateBlog.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/Child/Growth/Tracking/ulti/ConsultationStatus.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/Child/Growth/Tracking/ulti/Gender.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/Child/Growth/Tracking/ulti/UserRole.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/css/styles.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/css/swiper.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/forgotPassword.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/header.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/header.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/login.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/login.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/user/children.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/user/children.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/user/createChildren.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/user/createChildren.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/user/editChildren.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/user/editChildren.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/user/feedback/feedback.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/user/feedback/feedback.html" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -49,7 +109,7 @@
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
     "Spring Boot.ChildGrowthTrackingApplication.executor": "Run",
-    "git-widget-placeholder": "main",
+    "git-widget-placeholder": "Phuc",
     "ignore.virus.scanning.warn.message": "true",
     "kotlin-language-version-configured": "true",
     "node.js.detected.package.eslint": "true",
@@ -91,6 +151,7 @@
       <updated>1740510973185</updated>
       <workItem from="1740510974840" duration="65000" />
       <workItem from="1740512608687" duration="725000" />
+      <workItem from="1741961085892" duration="50000" />
     </task>
     <servers />
   </component>
