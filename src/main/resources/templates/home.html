@@ -1,0 +1,268 @@
+<div th:replace="~{header}"></div>
+
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        .hero {
+            background: url('images/children_growth.jpg') center calc(50% - 100px)/70% no-repeat;
+            min-height: 80vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: white;
+            font-weight: bold;
+            background-attachment: fixed;
+        }
+        .section-title {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            color: #007bff;
+        }
+        .btn-custom {
+            background-color: #F25c05; /* Màu cam */
+            color: white; /* Màu chữ trắng */
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            display: inline-block;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .btn-custom:hover {
+            background-color: white; /* Màu nền trắng */
+            color: #F25c05; /* Màu chữ cam */
+            border: 1px solid #F25c05; /* Viền cam để nhìn rõ hơn */
+        }
+
+    </style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="hero mb-5">
+    <div class="container position-absolute" style="bottom: 125px;">
+        <h1 class="display-4">Child Growth Tracking App</h1>
+        <p class="lead">Helping parents monitor and care for their children's health</p>
+        <a href="/login" class="btn-custom">Get Started</a>
+    </div>
+</header>
+
+<!-- About -->
+<section class="container py-5">
+    <h2 class="section-title text-center">About the Project</h2>
+    <p class="text-center">
+        This application helps parents track their children's growth from infancy to adulthood. 
+        Using modern technology, it provides growth charts, BMI calculations, vaccination reminders, 
+        and many other useful features to support child development.
+    </p>
+</section>
+
+<!-- Key Features -->
+<section class="container py-5">
+    <h2 class="section-title text-center">Key Features</h2>
+    <div class="row">
+        <div class="col-md-4 text-center">
+            <i class="fas fa-chart-line fa-3x text-primary"></i>
+            <h4>Height & Weight Tracking</h4>
+            <p>Update measurements over time and compare with WHO standards.</p>
+        </div>
+        <div class="col-md-4 text-center">
+            <i class="fas fa-user-md fa-3x text-success"></i>
+            <h4>Vaccination Reminders</h4>
+            <p>Receive alerts for important vaccines at each growth stage.</p>
+        </div>
+        <div class="col-md-4 text-center">
+            <i class="fas fa-apple-alt fa-3x text-warning"></i>
+            <h4>Nutrition Guidance</h4>
+            <p>Personalized meal recommendations based on age and health conditions.</p>
+        </div>
+    </div>
+</section>
+
+<!-- BMI Calculator -->
+<section class="bg-light py-5">
+    <div class="container">
+        <h2 class="section-title text-center">BMI Calculator</h2>
+        <p class="text-center">Enter height and weight to check body condition.</p>
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <form id="bmiForm">
+                    <div class="mb-3">
+                        <label for="height" class="form-label">Height (cm):</label>
+                        <input type="number" id="height" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="weight" class="form-label">Weight (kg):</label>
+                        <input type="number" id="weight" class="form-control" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Calculate BMI</button>
+                </form>
+                <div class="mt-3 text-center">
+                    <h5>Result: <span id="bmiResult"></span></h5>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Benefits -->
+<section class="container py-5">
+    <h2 class="section-title text-center">Why Use This App?</h2>
+    <ul class="list-group">
+        <li class="list-group-item"><i class="fas fa-check-circle text-success"></i> Helps parents monitor growth scientifically</li>
+        <li class="list-group-item"><i class="fas fa-check-circle text-success"></i> Supports early diagnosis of nutritional problems</li>
+        <li class="list-group-item"><i class="fas fa-check-circle text-success"></i> Convenient, easy to use, and completely free</li>
+    </ul>
+</section>
+
+<!-- Questions -->
+<section class="bg-light py-5 text-center">
+    <h2 class="section-title">FREQUENT QUESTIONS</h2>
+    <div class="accordion-1 p-0">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="accordion" id="accordionExample">
+                        
+                        <!-- Accordion Container -->
+                        <div class="accordion" id="accordionExample">
+
+                            <!-- Question 1 -->
+                            <div class="accordion-item bg-light">
+                                <h2 class="accordion-header" id="headingOne">
+                                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                                        What growth metrics does the app track?
+                                    </button>
+                                </h2>
+                                <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
+                                    <div class="accordion-body">
+                                        The app tracks height, weight, BMI, head circumference, and key developmental milestones based on age.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Question 2 -->
+                            <div class="accordion-item bg-light">
+                                <h2 class="accordion-header" id="headingTwo">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                                        Is the app suitable for children of all ages?
+                                    </button>
+                                </h2>
+                                <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#accordionExample">
+                                    <div class="accordion-body">
+                                        Yes, the app supports growth tracking from infancy to adolescence, following WHO growth standards.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Question 3 -->
+                            <div class="accordion-item bg-light">
+                                <h2 class="accordion-header" id="headingThree">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                                        Is my child’s data secure?
+                                    </button>
+                                </h2>
+                                <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#accordionExample">
+                                    <div class="accordion-body">
+                                        Absolutely! All data is encrypted and securely stored, ensuring that only parents or guardians have access.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Question 4 -->
+                            <div class="accordion-item bg-light">
+                                <h2 class="accordion-header" id="headingFour">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
+                                        Can I use multiple accounts on the same device?
+                                    </button>
+                                </h2>
+                                <div id="collapseFour" class="accordion-collapse collapse" aria-labelledby="headingFour" data-bs-parent="#accordionExample">
+                                    <div class="accordion-body">
+                                        Yes, you can create separate profiles for each child within the same account to track multiple children’s growth.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Question 5 -->
+                            <div class="accordion-item bg-light">
+                                <h2 class="accordion-header" id="headingFive">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFive" aria-expanded="false" aria-controls="collapseFive">
+                                        Can I enter past growth data?
+                                    </button>
+                                </h2>
+                                <div id="collapseFive" class="accordion-collapse collapse" aria-labelledby="headingFive" data-bs-parent="#accordionExample">
+                                    <div class="accordion-body">
+                                        Yes! You can input past growth records to get a comprehensive view of your child’s development over time.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Question 6 -->
+                            <div class="accordion-item bg-light">
+                                <h2 class="accordion-header" id="headingSix">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSix" aria-expanded="false" aria-controls="collapseSix">
+                                        Does the app send reminders?
+                                    </button>
+                                </h2>
+                                <div id="collapseSix" class="accordion-collapse collapse" aria-labelledby="headingSix" data-bs-parent="#accordionExample">
+                                    <div class="accordion-body">
+                                        Yes, the app will remind you of scheduled measurements, vaccination appointments, and key developmental milestones.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Question 7 -->
+                            <div class="accordion-item bg-light">
+                                <h2 class="accordion-header" id="headingSeven">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSeven" aria-expanded="false" aria-controls="collapseSeven">
+                                        Can I share my child’s data with doctors or family members?
+                                    </button>
+                                </h2>
+                                <div id="collapseSeven" class="accordion-collapse collapse" aria-labelledby="headingSeven" data-bs-parent="#accordionExample">
+                                    <div class="accordion-body">
+                                        Yes, you can export reports or share data with doctors and family members to help monitor your child’s growth.
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                        <!-- End of Accordion Container -->
+
+
+                    </div> <!-- end of accordion -->
+                </div> <!-- end of col -->
+            </div> <!-- end of row -->
+        </div> <!-- end of container -->
+    </div> <!-- end of accordion-1 -->
+    <!-- end of questions -->
+</section>
+
+
+<script>
+    document.getElementById("bmiForm").addEventListener("submit", function(event) {
+        event.preventDefault();
+        let height = parseFloat(document.getElementById("height").value) / 100;
+        let weight = parseFloat(document.getElementById("weight").value);
+        let bmi = (weight / (height * height)).toFixed(2);
+
+        let resultText = "";
+        if (bmi < 18.5) {
+            resultText = `BMI: ${bmi} (Underweight)`;
+        } else if (bmi >= 18.5 && bmi < 24.9) {
+            resultText = `BMI: ${bmi} (Normal weight)`;
+        } else if (bmi >= 25 && bmi < 29.9) {
+            resultText = `BMI: ${bmi} (Overweight)`;
+        } else {
+            resultText = `BMI: ${bmi} (Obese)`;
+        }
+
+        document.getElementById("bmiResult").innerText = resultText;
+    });
+</script>
+
+
+
+<div th:replace="~{footer}"></div>

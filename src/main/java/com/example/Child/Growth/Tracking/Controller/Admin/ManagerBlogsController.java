@@ -29,23 +29,11 @@ public class ManagerBlogsController {
 
     @GetMapping
     public String manageBlogs(Model model) {
-        model.addAttribute("page", "manageBlogs");
-        
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.isAuthenticated()) {
-            String username = authentication.getName();  // Lấy username của người dùng
-
-            // Giả sử bạn có một phương thức để lấy thông tin người dùng từ username
-            User user = userService.findByUsername(username).orElse(null);  // Trả về user nếu tìm thấy, nếu không trả về null
-
-            // Thêm đối tượng user vào model
-            if (user != null) {
-                model.addAttribute("user", user);
-            }
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated()) {
+            userService.findByUsername(auth.getName())
+                    .ifPresent(user -> model.addAttribute("user", user));
         }
-        
-        List<BlogPost> blogs = blogService.getAllBlogs();
-        model.addAttribute("blogs", blogs);
         return "admin/manageBlogs";
     }
 
@@ -54,8 +42,7 @@ public class ManagerBlogsController {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.isAuthenticated()) {
             String username = authentication.getName();  // Lấy username của người dùng
-
-            // Giả sử bạn có một phương thức để lấy thông tin người dùng từ username
+            
             User user = userService.findByUsername(username).orElse(null);  // Trả về user nếu tìm thấy, nếu không trả về null
 
             // Thêm đối tượng user vào model
@@ -70,23 +57,6 @@ public class ManagerBlogsController {
         return "admin/editBlog";
     }
 
-    @PostMapping("/update")
-    public String updateBlog(@ModelAttribute BlogPost blog, RedirectAttributes redirectAttributes) {
-        try {
-            blogService.saveBlog(blog);
-            redirectAttributes.addFlashAttribute("successMessage", "Blog updated successfully!");
-            return "redirect:/manageBlogs";
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Error updating blog: " + e.getMessage());
-            return "redirect:/manageBlogs";
-        }
-    }
-
-    @GetMapping("/delete/{id}")
-    public String deleteBlog(@PathVariable Long id) {
-        blogService.deleteBlog(id);
-        return "redirect:/manageBlogs";
-    }
 
     @GetMapping("/create")
     public String showCreateBlogForm(Model model) {
@@ -112,23 +82,4 @@ public class ManagerBlogsController {
         return "admin/createBlog";
     }
 
-    @PostMapping("/create")
-    public String createBlog(@ModelAttribute BlogPost blog, Model model) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.isAuthenticated()) {
-            String username = authentication.getName();  // Lấy username của người dùng
-
-            // Giả sử bạn có một phương thức để lấy thông tin người dùng từ username
-            User user = userService.findByUsername(username).orElse(null);  // Trả về user nếu tìm thấy, nếu không trả về null
-
-            // Thêm đối tượng user vào model
-            if (user != null) {
-                blog.setAuthor(user);  // Đảm bảo có author trước khi lưu
-                model.addAttribute("user", user);
-            }
-        }
-
-        blogService.saveBlog(blog);
-        return "redirect:/manageBlogs";
-    }
 }

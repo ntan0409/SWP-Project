@@ -31,18 +31,9 @@ public class Consultations {
 
     @Column(nullable = false, updatable = false)
     private LocalDate createdAt;
-
-    @ManyToOne
-    @JoinColumn(name = "member_id", nullable = false)
-    private User member;
-
-    @ManyToOne
-    @JoinColumn(name = "doctor_id", nullable = false)
-    private User doctor;
-
-    @ManyToOne
-    @JoinColumn(name = "child_id", nullable = false)
-    private Children child;
+    private Long memberId;
+    private Long doctorId;
+    private Long childId;
 
     @PrePersist
     protected void onCreate() {

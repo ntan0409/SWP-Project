@@ -1,0 +1,136 @@
+<div th:replace="~{header}"></div>
+
+<header class="ex-header">
+    <div class="container">
+        <div class="row">
+            <div class="col-xl-10 offset-xl-1">
+                <h1 class="text-center">Register</h1>
+            </div> <!-- end of col -->
+        </div> <!-- end of row -->
+    </div> <!-- end of container -->
+</header> <!-- end of ex-header -->
+
+<div class="ex-form-1 pt-5 pb-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-xl-6 offset-xl-3">
+                <div class="text-box mt-5 mb-5">
+                    <p class="mb-4">Already have an account? <a class="blue" href="login">Login</a></p>
+
+                    <!-- Register Form -->
+                    <form action="register" method="post">
+                        <div class="mb-4 form-floating">
+                            <input type="text" class="form-control" id="floatingUsername" placeholder="Username" name="username" required>
+                            <label for="floatingUsername">Username</label>
+                            <div id="error-username" class="invalid-feedback" style="display: none;"></div>
+                        </div>
+                        <div class="mb-4 form-floating">
+                            <input type="password" class="form-control" id="floatingPassword" placeholder="Password" name="password" required>
+                            <label for="floatingPassword">Password</label>
+                        </div>
+                        <div class="mb-4 form-floating">
+                            <input type="password" class="form-control" id="floatingConfirmPassword" placeholder="Confirm Password" name="confirmPassword" required>
+                            <label for="floatingConfirmPassword">Confirm Password</label>
+                            <div id="error-password-match" class="invalid-feedback" style="display: none;"></div>
+                        </div>
+                        <div class="mb-4 form-floating">
+                            <input type="text" class="form-control" id="floatingFullname" placeholder="Full Name" name="fullname" required>
+                            <label for="floatingFullname">Full Name</label>
+                        </div>
+                        <div class="mb-4 form-floating">
+                            <input type="email" class="form-control" id="floatingEmail" placeholder="Email" name="email" required>
+                            <label for="floatingEmail">Email</label>
+                            <div id="error-email" class="invalid-feedback" style="display: none;"></div>
+                        </div>
+                        <div class="mb-4 form-floating">
+                            <input type="text" class="form-control" id="floatingPhone" placeholder="PhoneNumber" name="phoneNumber" required>
+                            <label for="floatingPhone">Phone Number</label>
+                            <div id="error-phone" class="invalid-feedback" style="display: none;"></div>
+                        </div>
+
+                        <button type="submit" class="form-control-submit-button">Register</button>
+                    </form>
+                    <!-- end of register form -->
+                </div> <!-- end of text-box -->
+            </div> <!-- end of col -->
+        </div> <!-- end of row -->
+    </div> <!-- end of container -->
+</div> <!-- end of ex-basic-1 -->
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+    async function checkAvailability(field, value) {
+        if (!value.trim()) return; // Không kiểm tra nếu input rỗng
+
+        let response = await fetch(`/check-${field}?${field}=${value}`);
+        let data = await response.json();
+
+        console.log(data);  // Kiểm tra dữ liệu trả về
+
+        let inputField = document.getElementById(`floating${field.charAt(0).toUpperCase() + field.slice(1)}`);
+        let errorMessage = document.getElementById(`error-${field}`);
+
+        // Kiểm tra nếu phần tử tồn tại trước khi thao tác với nó
+        if (inputField && errorMessage) {
+            if (!data.available) {
+                errorMessage.style.display = "block";
+                errorMessage.innerText = `${field.charAt(0).toUpperCase() + field.slice(1)} already exists.`;
+                inputField.classList.add("is-invalid");
+                return false; // Nếu có lỗi thì trả về false
+            } else {
+                errorMessage.style.display = "none";
+                inputField.classList.remove("is-invalid");
+                return true; // Nếu không có lỗi thì trả về true
+            }
+        } else {
+            console.error(`Input field or error message for ${field} not found.`);
+            return false;
+        }
+    }
+    // Kiểm tra mật khẩu và xác nhận mật khẩu
+    function checkPasswordMatch() {
+        let password = document.getElementById("floatingPassword").value;
+        let confirmPassword = document.getElementById("floatingConfirmPassword").value;
+
+        let errorMessage = document.getElementById("error-password-match");
+        if (password !== confirmPassword) {
+            errorMessage.style.display = "block";
+            errorMessage.innerText = "Passwords do not match.";
+            document.getElementById("floatingConfirmPassword").classList.add("is-invalid");
+            return false;
+        } else {
+            errorMessage.style.display = "none";
+            document.getElementById("floatingConfirmPassword").classList.remove("is-invalid");
+            return true;
+        }
+    }
+
+    document.getElementById("floatingUsername").addEventListener("input", (e) => checkAvailability("username", e.target.value));
+    document.getElementById("floatingEmail").addEventListener("input", (e) => checkAvailability("email", e.target.value));
+    document.getElementById("floatingPhone").addEventListener("input", (e) => checkAvailability("phone", e.target.value));
+
+    // Kiểm tra mật khẩu và xác nhận mật khẩu khi người dùng nhập liệu
+    document.getElementById("floatingPassword").addEventListener("input", checkPasswordMatch);
+    document.getElementById("floatingConfirmPassword").addEventListener("input", checkPasswordMatch);
+
+    // Kiểm tra các trường trước khi submit form
+    document.querySelector("form").addEventListener("submit", async (e) => {
+        e.preventDefault(); // Ngăn chặn gửi form
+
+        // Kiểm tra tất cả các trường (username, email, phone)
+        const usernameValid = await checkAvailability("username", document.getElementById("floatingUsername").value);
+        const emailValid = await checkAvailability("email", document.getElementById("floatingEmail").value);
+        const phoneValid = await checkAvailability("phone", document.getElementById("floatingPhone").value);
+        const passwordValid = checkPasswordMatch();  // Kiểm tra mật khẩu và xác nhận mật khẩu
+
+        if (usernameValid && emailValid && phoneValid && passwordValid) {
+            e.target.submit(); // Nếu không có lỗi thì gửi form
+        }
+    });
+});
+
+</script>
+
+
+
+<div th:replace="~{footer}"></div>

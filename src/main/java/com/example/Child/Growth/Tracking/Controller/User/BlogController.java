@@ -1,4 +1,4 @@
-package com.example.Child.Growth.Tracking.Controller;
+package com.example.Child.Growth.Tracking.Controller.User;
 
 import java.util.List;
 import java.util.Optional;
@@ -37,7 +37,7 @@ public class BlogController {
         model.addAttribute("page", "blog");
         model.addAttribute("blogs", blogs);
         model.addAttribute("categories", blogService.getAllCategories()); // Load danh mục từ Enum
-        return "blog";
+        return "user/blog/blog";
     }
 
     @GetMapping("/{id}")
@@ -50,8 +50,7 @@ public class BlogController {
         
         model.addAttribute("page", "blog");
         model.addAttribute("blog", blogOptional.get()); // Lấy giá trị thực
-        return "blog_detail"; // Trả về template
+        return "user/blog/blog_detail"; // Trả về template
     }
     
-
 }

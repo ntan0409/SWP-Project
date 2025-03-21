@@ -5,6 +5,8 @@ import lombok.*;
 
 import java.time.LocalDate;
 
+import org.springframework.format.annotation.DateTimeFormat;
+
 
 @Entity
 @Table(name = "growth_records")
@@ -26,9 +28,7 @@ public class GrowthRecords {
     @Column(nullable = false)
     private Double height;  // Height in cm
 
-    @Column
-    private Double bmi;    // BMI index
-
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
     @Column(name = "record_date", nullable = false)
     private LocalDate recordDate;
 
