@@ -29,7 +29,6 @@ public class GrowthRecordService {
                 .orElseThrow(() -> new RuntimeException("Growth record not found"));
             existingGrowthRecord.setWeight(growthRecord.getWeight());
             existingGrowthRecord.setHeight(growthRecord.getHeight());
-            existingGrowthRecord.setBmi(growthRecord.getBmi());
             existingGrowthRecord.setRecordDate(growthRecord.getRecordDate());
             return growthRecordsRepository.save(existingGrowthRecord);
         } catch (Exception e) {

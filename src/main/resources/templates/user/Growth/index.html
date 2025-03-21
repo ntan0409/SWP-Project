@@ -1,0 +1,117 @@
+<div th:replace="~{header}"></div>
+
+<div class="container py-5">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100 sticky-top" style="top: 20px;">
+                <div class="card-body">
+                    <h3 class="text-primary fw-bold mb-4">
+                        <i class="fas fa-child me-2"></i>Child Information
+                    </h3>
+                    <div class="child-info">
+                        <div class="mb-3">
+                            <label class="text-muted small">Full Name</label>
+                            <h5 class="mb-0" th:text="${children.fullName}"></h5>
+                        </div>
+                        <div class="mb-3">
+                            <label class="text-muted small">Birth Date</label>
+                            <h5 class="mb-0" th:text="${children.birthDate}"></h5>
+                        </div>
+                        <div class="mb-3">
+                            <label class="text-muted small">Gender</label>
+                            <h5 class="mb-0" th:text="${children.gender}"></h5>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <a th:href="@{/children}" class="btn btn-outline-secondary w-100">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Children
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3 class="text-primary fw-bold">
+                    <i class="fas fa-chart-line me-2"></i>Growth Records
+                </h3>
+                <a th:href="@{/children/growth-records/{childrenId}/create(childrenId=${childrenId})}" 
+                   class="btn btn-primary">
+                   <i class="fas fa-plus me-2"></i>Add Growth Record
+                </a>
+            </div>
+
+            <div class="growth-records-container">
+                <div th:each="growthRecord : ${growthRecords}" class="card mb-3 shadow-sm hover-shadow transition">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-9">
+                                <div class="d-flex flex-wrap gap-4">
+                                    <div>
+                                        <label class="text-muted small">Record Date</label>
+                                        <h6 class="mb-0" th:text="${growthRecord.recordDate}"></h6>
+                                    </div>
+                                    <div>
+                                        <label class="text-muted small">Weight</label>
+                                        <h6 class="mb-0" th:text="${growthRecord.weight} + ' kg'"></h6>
+                                    </div>
+                                    <div>
+                                        <label class="text-muted small">Height</label>
+                                        <h6 class="mb-0" th:text="${growthRecord.height} + ' cm'"></h6>
+                                    </div>
+                                    <div>
+                                        <label class="text-muted small">BMI</label>
+                                        <h6 class="mb-0" th:text="${growthRecord.bmi}"></h6>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="d-flex gap-2 justify-content-end">
+                                    <a th:href="@{/children/growth-records/{childrenId}/edit/{id}(childrenId=${childrenId}, id=${growthRecord.id})}" 
+                                       class="btn btn-outline-primary btn-sm">
+                                       <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a th:href="@{/children/growth-records/{childrenId}/delete/{id}(childrenId=${childrenId}, id=${growthRecord.id})}" 
+                                       class="btn btn-outline-danger btn-sm">
+                                       <i class="fas fa-trash"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{footer}"></div>
+
+<style>
+.hover-shadow:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important;
+}
+
+.transition {
+    transition: all 0.3s ease;
+}
+
+.sticky-top {
+    z-index: 100;
+}
+
+.child-info label {
+    margin-bottom: 0.25rem;
+}
+
+.growth-records-container {
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+}
+
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+}
+</style>

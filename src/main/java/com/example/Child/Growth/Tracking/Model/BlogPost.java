@@ -10,6 +10,7 @@ import java.util.Date;
 import java.util.Locale;
 
 import com.example.Child.Growth.Tracking.ulti.CateBlog;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @Entity
 @Table(name = "blog_posts")
@@ -17,6 +18,7 @@ import com.example.Child.Growth.Tracking.ulti.CateBlog;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class BlogPost {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -61,17 +61,44 @@ public class ManagerUsersController {
         return "admin/editUser";
     }
 
-    @PostMapping("/update")
-    public String updateUser(@ModelAttribute User user, RedirectAttributes redirectAttributes) {
-        try {
-            userService.updateUser(user);
-            redirectAttributes.addFlashAttribute("successMessage", "User updated successfully!");
-            return "redirect:/manageUsers";
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Error updating user: " + e.getMessage());
-            return "redirect:/manageUsers";
-        }
-    }
+    // @PostMapping("/update")
+    // public String updateUser(@ModelAttribute User user, RedirectAttributes redirectAttributes) {
+    //     try {
+    //         User existingUser = userService.findById(user.getId()).orElse(null);
+    //         if (existingUser == null) {
+    //             redirectAttributes.addFlashAttribute("errorMessage", "User not found!");
+    //             return "redirect:/manageUsers";
+    //         }
+    
+    //         if (!existingUser.getUsername().equals(user.getUsername()) && userService.existsByUsername(user.getUsername())) {
+    //             redirectAttributes.addFlashAttribute("errorMessage", "Username already exists!");
+    //             return "redirect:/manageUsers/edit/" + user.getId();
+    //         }
+    
+    //         if (!existingUser.getEmail().equals(user.getEmail()) && userService.existsByEmail(user.getEmail())) {
+    //             redirectAttributes.addFlashAttribute("errorMessage", "Email already exists!");
+    //             return "redirect:/manageUsers/edit/" + user.getId();
+    //         }
+    
+    //         if (!existingUser.getPhoneNumber().equals(user.getPhoneNumber()) && userService.existsByPhone(user.getPhoneNumber())) {
+    //             redirectAttributes.addFlashAttribute("errorMessage", "Phone number already exists!");
+    //             return "redirect:/manageUsers/edit/" + user.getId();
+    //         }
+    
+    //         existingUser.setFullName(user.getFullName());
+    //         existingUser.setEmail(user.getEmail());
+    //         existingUser.setPhoneNumber(user.getPhoneNumber());
+    //         existingUser.setRole(user.getRole());
+    
+    //         userService.updateUser(existingUser);
+    //         redirectAttributes.addFlashAttribute("successMessage", "User updated successfully!");
+    //         return "redirect:/manageUsers";
+    //     } catch (Exception e) {
+    //         redirectAttributes.addFlashAttribute("errorMessage", "Error updating user: " + e.getMessage());
+    //         return "redirect:/manageUsers/edit/" + user.getId();
+    //     }
+    // }
+    
 
     @GetMapping("/delete/{id}")
     public String deleteUser(@PathVariable Long id) {
@@ -87,8 +114,32 @@ public class ManagerUsersController {
     }
 
     @PostMapping("/create")
-    public String createUser(@ModelAttribute User user) {
-        userService.save(user);
-        return "redirect:/manageUsers";
+    public String createUser(@ModelAttribute User user, RedirectAttributes redirectAttributes) {
+        try {
+            // Kiểm tra username đã tồn tại chưa
+            if (userService.existsByUsername(user.getUsername())) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Username already exists!");
+                return "redirect:/manageUsers/create";
+            }
+    
+            // Kiểm tra email đã tồn tại chưa
+            if (userService.existsByEmail(user.getEmail())) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Email already exists!");
+                return "redirect:/manageUsers/create";
+            }
+    
+            if (userService.existsByPhone(user.getPhoneNumber())) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Phone number already exists!");
+                return "redirect:/manageUsers/create";
+            }
+
+            userService.save(user);
+            redirectAttributes.addFlashAttribute("successMessage", "User created successfully!");
+            return "redirect:/manageUsers";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Error creating user: " + e.getMessage());
+            return "redirect:/manageUsers/create";
+        }
     }
+    
 }

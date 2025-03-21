@@ -1,0 +1,35 @@
+<div th:replace="~{header}"></div>
+
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <h3>Edit Growth</h3>
+            <form th:action="@{/children/growth-records/update}" th:object="${growthRecord}" method="post">
+                <input type="hidden" th:field="*{childId}" name="child_id">
+                <input type="hidden" th:field="*{id}" name="id">
+                <div class="mb-3">
+                    <label for="weight" class="form-label">Weight</label>
+                    <input type="text" class="form-control" id="weight" name="weight" th:value="${growthRecord.weight}" required>
+                </div>
+                <div class="mb-3">
+                    <label for="height" class="form-label">Height</label>
+                    <input type="text" class="form-control" id="height" name="height" th:value="${growthRecord.height}" required>
+                </div>
+                <div class="mb-3">
+                    <label for="bmi" class="form-label">BMI</label>
+                    <input type="text" class="form-control" id="bmi" name="bmi" th:value="${growthRecord.bmi}" required>
+                </div>
+                <div class="mb-3">
+                    <label for="recordDate" class="form-label">Record Date</label>
+                    <input type="date" class="form-control" id="recordDate" name="recordDate" th:value="${growthRecord.recordDate}" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Update</button>
+                <a th:href="@{/children/growth-records/{childrenId}(childrenId=${childrenId})}" class="btn btn-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<div th:replace="~{footer}"></div>

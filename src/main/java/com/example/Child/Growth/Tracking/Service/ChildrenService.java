@@ -1,6 +1,7 @@
 package com.example.Child.Growth.Tracking.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
@@ -22,8 +23,8 @@ public class ChildrenService {
     public List<Children> findByUserId(Long userId) {
         return childrenRepository.findByUserId(userId);
     }
-    public Children findById(Long id) {
-        return childrenRepository.findById(id).orElse(null);
+    public Optional<Children> findById(Long id) {
+        return childrenRepository.findById(id);
     }
     public Children updateChildren(Children children) {
         try {

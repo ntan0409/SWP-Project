@@ -26,7 +26,7 @@ public class ChildGrowthTrackingApplication {
 	@Bean
 	CommandLineRunner initDatabase(UserRepository userRepository, PasswordEncoder passwordEncoder) {
 		return args -> {
-			if (userRepository.findByUsername("admin").isEmpty()) {
+			if (userRepository.findByUsername("admin").isEmpty() && userRepository.findByEmail("admin@example.com").isEmpty() && userRepository.findByPhoneNumber("0909090909").isEmpty()) {
 				User admin = new User();
 				admin.setUsername("admin");
 				admin.setPassword(passwordEncoder.encode("admin123"));
