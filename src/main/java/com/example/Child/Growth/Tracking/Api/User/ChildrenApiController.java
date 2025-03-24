@@ -4,17 +4,23 @@ import com.example.Child.Growth.Tracking.Model.Children;
 import com.example.Child.Growth.Tracking.Service.ChildrenService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import com.example.Child.Growth.Tracking.Model.User;
+import com.example.Child.Growth.Tracking.Service.UserService;
 import java.util.List;
 import java.util.Optional;
+import java.util.Collections;
 
 @RestController
 @RequestMapping("/api/children")
 public class ChildrenApiController {
     private final ChildrenService childrenService;
+    private final UserService userService;
 
-    public ChildrenApiController(ChildrenService childrenService) {
+    public ChildrenApiController(ChildrenService childrenService, UserService userService) {
         this.childrenService = childrenService;
+        this.userService = userService;
     }
 
     @GetMapping
@@ -24,9 +30,36 @@ public class ChildrenApiController {
     }
 
     @PostMapping
-    public ResponseEntity<Children> createChildren(@RequestBody Children children) {
-        Children savedChildren = childrenService.save(children);
-        return ResponseEntity.ok(savedChildren);
+    public ResponseEntity<?> createChildren(@RequestBody Children children) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+        User user = userService.findByUsername(username).orElse(null);
+        if (user != null) {
+            int count = childrenService.countByUserId(user.getId());
+            String paymentStatus = user.getPaymentStatus();
+            if (paymentStatus != null && paymentStatus.equals("paid")) {
+                if (count <= 9) {
+                    children.setUserId(user.getId());
+                    Children savedChildren = childrenService.save(children);
+                    return ResponseEntity.ok(savedChildren);
+                }
+                else {
+                    return ResponseEntity.badRequest().body(Collections.singletonMap("error", "User has reached the maximum number of children"));
+                }
+            }
+            else {
+                if (count <= 2) {
+                    children.setUserId(user.getId());
+                    Children savedChildren = childrenService.save(children);
+                    return ResponseEntity.ok(savedChildren);
+                }
+                else {
+                    return ResponseEntity.badRequest().body(Collections.singletonMap("error", "User has not paid"));
+                }
+            }
+        }
+        
+        return ResponseEntity.ok(null);
     }
 
     @PutMapping("/{id}")
