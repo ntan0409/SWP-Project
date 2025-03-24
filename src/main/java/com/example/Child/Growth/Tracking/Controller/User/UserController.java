@@ -1,4 +1,4 @@
-package com.example.Child.Growth.Tracking.Controller;
+package com.example.Child.Growth.Tracking.Controller.User;
 
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -57,7 +57,7 @@ public class UserController {
                 model.addAttribute("user", user);
             }
         }
-        return "profile";
+        return "user/profile/profile";
     }
 
     @GetMapping("/update")
@@ -72,7 +72,7 @@ public class UserController {
             model.addAttribute("user", user);
         }
         
-        return "profile";
+        return "user/profile/profile";
     }
 
     @PostMapping("/update")
@@ -170,7 +170,7 @@ public class UserController {
             model.addAttribute("user", user);
         }
         
-        return "profile";
+        return "user/profile/profile";
     }
 
     @PostMapping("/changepass")
