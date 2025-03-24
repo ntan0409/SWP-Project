@@ -5,11 +5,8 @@
     <!-- Header Section -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="mb-0">
-            <i class="fas fa-newspaper me-2"></i>Blog Management
+            <i class="fas fa-newspaper me-2"></i>Consultation Management
         </h2>
-        <a th:href="@{/manageBlogs/create}" class="btn btn-primary">
-            <i class="fas fa-plus me-2"></i>Create New Blog
-        </a>
     </div>
 
     <!-- Main Card -->
@@ -22,20 +19,22 @@
                 </div>
             </div>
 
-            <!-- Blog Table -->
+            <!--  Consultation Table -->
             <div class="table-responsive">
-                <table id="blogTable" class="table table-bordered table-hover">
+                <table id="consultationTable" class="table table-bordered table-hover">
                     <thead class="table-light">
                         <tr>
-                            <th>Title</th>
-                            <th>Category</th>
-                            <th>Content</th>
-                            <th>Author</th>
+                            <th>Child ID</th>
+                            <th>Member ID</th>
+                            <th>Doctor ID</th>
+                            <th>Request</th>
+                            <th>Response</th>
+                            <th>Status</th>
                             <th>Created At</th>
                             <th class="text-center">Actions</th>
                         </tr>
                     </thead>
-                    <tbody id="blogTableBody"></tbody>
+                    <tbody id="consultationTableBody"></tbody>
                 </table>
             </div>
         </div>
@@ -51,7 +50,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                Are you sure you want to delete this blog post?
+                Are you sure you want to delete this consultation?
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -61,96 +60,155 @@
     </div>
 </div>
 
+<!-- Modal template -->
+<div class="modal fade" id="growthModal">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-child me-2"></i>
+                    Child Growth Records
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="growth-records" id="growthRecordsContainer">
+                    <!-- Growth records will be loaded here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 <script>
 let dataTable;
 let deleteModal;
-let blogToDelete;
+let consultationToDelete;
 
 document.addEventListener('DOMContentLoaded', function() {
     initializeComponents();
-    loadBlogs();
+    loadConsultations();
 });
 
 function initializeComponents() {
     deleteModal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
     
     document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
-        if (blogToDelete) {
-            executeDelete(blogToDelete.id, blogToDelete.button);
+        if (consultationToDelete) {
+            executeDelete(consultationToDelete.id, consultationToDelete.button);
         }
         deleteModal.hide();
     });
 }
 
-async function loadBlogs() {
+async function loadConsultations() {
     const spinner = document.getElementById('loadingSpinner');
-    const table = document.getElementById('blogTable');
+    const table = document.getElementById('consultationTable');
     
     try {
         spinner.style.display = 'block';
         table.style.opacity = '0.5';
 
-        const response = await fetch('/api/blogs');
-        if (!response.ok) throw new Error('Failed to fetch blogs');
-        const blogs = await response.json();
+        const response = await fetch('/api/admin/consultations');
+        if (!response.ok) throw new Error('Failed to fetch consultations');
+        const consultations = await response.json();
 
         if (dataTable) {
             dataTable.destroy();
         }
 
-        renderBlogTable(blogs);
+        renderConsultationTable(consultations);
         initializeDataTable();
 
     } catch (error) {
         console.error('Error:', error);
-        showNotification('Failed to load blogs', 'danger');
+        showNotification('Failed to load consultations', 'danger');
     } finally {
         spinner.style.display = 'none';
         table.style.opacity = '1';
     }
 }
 
-function renderBlogTable(blogs) {
-    const tableBody = document.getElementById('blogTableBody');
+function renderGrowthRecords(records) {
+    const container = document.getElementById('growthRecordsContainer');
+    
+    if (!records || records.length === 0) {
+        container.innerHTML = `
+            <div class="empty-records">
+                <i class="fas fa-chart-area"></i>
+                <p>No growth records found for this child.</p>
+            </div>`;
+        return;
+    }
+
+    container.innerHTML = `
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Height (cm)</th>
+                        <th>Weight (kg)</th>
+                        <th>Record Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${records.map(record => `
+                        <tr>
+                            <td>${record.height}</td>
+                            <td>${record.weight}</td>
+                            <td>${new Date(record.recordDate).toLocaleDateString()}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        </div>`;
+}
+function renderConsultationTable(consultations) {
+    const tableBody = document.getElementById('consultationTableBody');
     tableBody.innerHTML = '';
 
-    if (!blogs || blogs.length === 0) {
+    if (!consultations || consultations.length === 0) {
         tableBody.innerHTML = `
             <tr>
                 <td colspan="6" class="text-center py-4">
                     <div class="text-muted">
                         <i class="fas fa-inbox fa-2x mb-3"></i>
-                        <p class="mb-0">No blog posts found</p>
+                        <p class="mb-0">No consultations found</p>
                     </div>
                 </td>
             </tr>
         `;
         return;
     }
-
-    blogs.forEach(blog => {
+    consultations.forEach(consultation => {
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>
-                <div class="fw-bold">${(blog.title || '')}</div>
+                <div class="fw-bold">${(consultation.childId || '')}</div>
             </td>
             <td>
-                <span class="badge bg-info">${(blog.category || '')}</span>
+                <span class="badge bg-info">${(consultation.memberId || '')}</span>
             </td>
             <td>
                 <div class="text-truncate" style="max-width: 200px; max-height: 100px;">
-                    ${(blog.content || '')}
+                    ${(consultation.doctorId || '')}
                 </div>
             </td>
-            <td>${(blog.author?.fullName || '')}</td>
-            <td>${formatDate(blog.createdAt)}</td>
+            <td>${(consultation.request || '')}</td>
+            <td>${(consultation.response || '')}</td>
+            <td>${(consultation.status || '')}</td>
+            <td>${formatDate(consultation.createdAt)}</td>
             <td class="text-center">
                 <div class="btn-group">
-                    <a href="/manageBlogs/edit/${blog.id}" 
-                       class="btn btn-sm btn-outline-primary">
-                        <i class="fas fa-edit"></i>
-                    </a>
-                    <button onclick="confirmDelete(${blog.id}, this)" 
+                    <button onclick="loadGrowthRecords(${consultation.childId})" 
+                            class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-chart-line"></i>
+                    </button>
+                    <button onclick="confirmDelete(${consultation.id}, this)" 
                             class="btn btn-sm btn-outline-danger">
                         <i class="fas fa-trash"></i>
                     </button>
@@ -160,23 +218,36 @@ function renderBlogTable(blogs) {
         tableBody.appendChild(row);
     });
 }
-
+async function loadGrowthRecords(childId) {
+    try {
+        const response = await fetch(`/api/growth-records/child/${childId}`);
+        if (!response.ok) throw new Error('Failed to fetch growth records');
+        const records = await response.json();
+        
+        renderGrowthRecords(records);
+        const modal = new bootstrap.Modal(document.getElementById('growthModal'));
+        modal.show();
+    } catch (error) {
+        console.error('Error:', error);
+        showNotification('Failed to load growth records', 'danger');
+    }
+}
 function initializeDataTable() {
-    dataTable = new simpleDatatables.DataTable("#blogTable", {
+    dataTable = new simpleDatatables.DataTable("#consultationTable", {
         searchable: true,
         fixedHeight: true,
         perPage: 10,
         perPageSelect: [5, 10, 15, 20, 25],
         labels: {
-            placeholder: "Search blogs...",
-            noRows: "No blogs found",
+            placeholder: "Search consultations...",
+            noRows: "No consultations found",
             info: "Showing {start} to {end} of {rows} entries",
         }
     });
 }
 
 function confirmDelete(id, button) {
-    blogToDelete = { id, button };
+    consultationToDelete = { id, button };
     deleteModal.show();
 }
 
@@ -186,18 +257,18 @@ async function executeDelete(id, button) {
         const originalContent = button.innerHTML;
         button.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
 
-        const response = await fetch(`/api/blogs/${id}`, {
+        const response = await fetch(`/api/admin/consultations/${id}`, {
             method: 'DELETE'
         });
 
-        if (!response.ok) throw new Error('Failed to delete blog');
+        if (!response.ok) throw new Error('Failed to delete consultation');
 
-        await loadBlogs();
-        showNotification('Blog deleted successfully', 'success');
+        await loadConsultations();
+        showNotification('Consultation deleted successfully', 'success');
 
     } catch (error) {
         console.error('Error:', error);
-        showNotification('Failed to delete blog', 'danger');
+        showNotification('Failed to delete consultation', 'danger');
         button.disabled = false;
         button.innerHTML = originalContent;
     }
@@ -259,6 +330,49 @@ function formatDate(dateString) {
     font-weight: 500;
     padding: 0.5em 1em;
 }
+.modal-content {
+    border: none;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+}
+
+.modal-header {
+    background-color: var(--primary-light);
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.modal-title {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.growth-records {
+    width: 100%;
+}
+.empty-records {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 2rem;
+    text-align: center;
+}
+
+.empty-records i {
+    font-size: 2.5rem;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+}
+
+.empty-records p {
+    color: var(--text-muted);
+}
+
 
 /* Notification Styles */
 .notification {

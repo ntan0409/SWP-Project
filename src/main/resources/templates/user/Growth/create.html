@@ -1,29 +1,27 @@
 <div th:replace="~{header}"></div>
 
-
-<div class="container">
+<div class="container mb-3">
     <div class="row">
         <div class="col-md-12">
-            <h3>Add Growth</h3>
-            <form th:action="@{/children/growth-records/{childrenId}/create(childrenId=${childrenId})}" th:object="${growthRecords}" method="post">
-                <input type="hidden" th:value="${childrenId}" name="child_id">
-                <!-- <input type="hidden" th:value="${childId}" name="childId"> -->
-                <div class="mb-3">
-                    <label for="weight" class="form-label">Weight</label>
-                    <input type="text" class="form-control" id="weight" name="weight" required>
-                </div>
-                <div class="mb-3">
-                    <label for="height" class="form-label">Height</label>
-                    <input type="text" class="form-control" id="height" name="height" required>
-                </div>
-                <div class="mb-3">
-                    <label for="bmi" class="form-label">BMI</label>
-                    <input type="text" class="form-control" id="bmi" name="bmi" required>
-                </div>
+            <h3>Create Growth Record</h3>
+            <form id="createGrowthRecordForm" onsubmit="handleSubmit(event)">
+                <input type="hidden" id="childrenId" th:value="${childrenId}">
+                
                 <div class="mb-3">
                     <label for="recordDate" class="form-label">Record Date</label>
                     <input type="date" class="form-control" id="recordDate" name="recordDate" required>
                 </div>
+                
+                <div class="mb-3">
+                    <label for="weight" class="form-label">Weight (kg)</label>
+                    <input type="number" step="0.1" min="0" class="form-control" id="weight" name="weight" required>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="height" class="form-label">Height (cm)</label>
+                    <input type="number" step="0.1" min="0" class="form-control" id="height" name="height" required>
+                </div>
+                
                 <button type="submit" class="btn btn-primary">Create</button>
                 <a th:href="@{/children/growth-records/{id}(id=${childrenId})}" class="btn btn-secondary">Cancel</a>
             </form>
@@ -31,5 +29,106 @@
     </div>
 </div>
 
+<script>
+// CSRF setup
+let csrfToken, csrfHeader;
+try {
+    csrfToken = document.querySelector("meta[name='_csrf']")?.content || '';
+    csrfHeader = document.querySelector("meta[name='_csrf_header']")?.content || 'X-CSRF-TOKEN';
+} catch (e) {
+    console.warn('CSRF meta tags not found');
+    csrfToken = '';
+    csrfHeader = 'X-CSRF-TOKEN';
+}
+// Thay đổi phần thiết lập ngày
+const today = new Date();
+const dd = String(today.getDate()).padStart(2, '0');
+const mm = String(today.getMonth() + 1).padStart(2, '0'); // January is 0!
+const yyyy = today.getFullYear();
+const maxDate = yyyy + '-' + mm + '-' + dd;
+
+// Hàm để lấy birthday của child
+async function fetchChildBirthday() {
+    const childrenId = document.getElementById('childrenId').value;
+    try {
+        const response = await fetch(`/api/children/${childrenId}`, {
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+        if (!response.ok) throw new Error('Failed to fetch child data');
+        const childData = await response.json();
+        return childData.birthDate;
+    } catch (error) {
+        console.error('Error fetching child birthday:', error);
+        showError('Failed to fetch child data');
+        return null;
+    }
+}
+
+// Khởi tạo date input với birthday
+async function initializeDateInput() {
+    const birthday = await fetchChildBirthday();
+    document.getElementById('recordDate').value = maxDate;
+    if (birthday) {
+        document.getElementById('recordDate').setAttribute('min', birthday);
+        document.getElementById('recordDate').setAttribute('max', maxDate);
+    }
+}
+
+initializeDateInput();
+
+async function handleSubmit(event) {
+    event.preventDefault();
+    const childrenId = document.getElementById('childrenId').value;
+    
+    const weight = parseFloat(document.getElementById('weight').value);
+    const height = parseFloat(document.getElementById('height').value);
+    
+    // Validate weight và height
+    if (weight <= 0) {
+        showError('Weight must be greater than 0');
+        return;
+    }
+    
+    if (height <= 0) {
+        showError('Height must be greater than 0');
+        return;
+    }
+    
+    const formData = {
+        recordDate: document.getElementById('recordDate').value,
+        weight: weight,
+        height: height
+    };
+
+    try {
+        const response = await fetch(`/api/growth-records/child/${childrenId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                [csrfHeader]: csrfToken
+            },
+            body: JSON.stringify(formData)
+        });
+
+        if (!response.ok) throw new Error('Failed to create growth record');
+        
+        showSuccess('Growth record created successfully');
+        window.location.href = `/children/growth-records/${childrenId}`;
+    } catch (error) {
+        console.error('Error:', error);
+        showError('Failed to create growth record');
+    }
+}
+
+function showSuccess(message) {
+    alert(message); // Replace with your preferred notification system
+}
+
+function showError(message) {
+    alert(message); // Replace with your preferred notification system
+}
+</script>
 
 <div th:replace="~{footer}"></div>

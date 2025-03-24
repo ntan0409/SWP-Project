@@ -1,0 +1,329 @@
+<div th:replace="~{header}"></div>
+
+<div class="container py-5">
+    <input type="hidden" id="childId" th:value="${childId}">
+    
+    <div class="dashboard-header mb-5">
+        <div class="header-content">
+            <h2 class="text-primary fw-bold mb-2">
+                <i class="fas fa-comments-alt me-2"></i>Doctor Responses
+            </h2>
+            <p class="text-muted mb-0">View responses and recommendations from your doctor</p>
+        </div>
+        <div class="header-stats">
+            <div class="stat-card completed">
+                <i class="fas fa-check-circle"></i>
+                <div class="stat-info">
+                    <span class="stat-value" id="completedCount">0</span>
+                    <span class="stat-label">Completed</span>
+                </div>
+            </div>
+            <div class="stat-card pending">
+                <i class="fas fa-clock"></i>
+                <div class="stat-info">
+                    <span class="stat-value" id="pendingCount">0</span>
+                    <span class="stat-label">Pending</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Completed Responses Column -->
+        <div class="col-md-6">
+            <div class="section-header">
+                <h4 class="text-success mb-4">
+                    <i class="fas fa-check-circle me-2"></i>Completed Responses
+                </h4>
+            </div>
+            <div class="consultation-list" id="completedResponses">
+                <!-- Completed responses will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Pending Requests Column -->
+        <div class="col-md-6">
+            <div class="section-header">
+                <h4 class="text-warning mb-4">
+                    <i class="fas fa-clock me-2"></i>Pending Requests
+                </h4>
+            </div>
+            <div class="consultation-list" id="pendingRequests">
+                <!-- Pending requests will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+async function loadConsultations() {
+    const childId = document.getElementById('childId').value;
+    try {
+        const response = await fetch(`/api/consultations/child/${childId}`);
+        if (!response.ok) throw new Error('Failed to fetch consultations');
+        const data = await response.json();
+        
+        // Update stats
+        document.getElementById('completedCount').textContent = data.completed.length;
+        document.getElementById('pendingCount').textContent = data.pending.length;
+        
+        renderCompletedResponses(data.completed);
+        renderPendingRequests(data.pending);
+    } catch (error) {
+        console.error('Error:', error);
+        showNotification('Failed to load consultations', 'danger');
+    }
+}
+
+function renderCompletedResponses(consultations) {
+    const container = document.getElementById('completedResponses');
+    if (consultations.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-check-circle"></i>
+                <p>No completed responses yet.</p>
+            </div>`;
+        return;
+    }
+
+    container.innerHTML = consultations.map(consultation => `
+        <div class="consultation-card completed">
+            <div class="card-header">
+                <span class="badge bg-success">
+                    <i class="fas fa-check-circle me-1"></i>COMPLETED
+                </span>
+                <small class="text-muted">${formatDate(consultation.createdAt)}</small>
+            </div>
+            <div class="card-content">
+                <div class="request-section">
+                    <h6 class="section-title">
+                        <i class="fas fa-question-circle me-2"></i>Your Request
+                    </h6>
+                    <p class="request-text">${consultation.request}</p>
+                </div>
+
+                <div class="response-section">
+                    <h6 class="section-title">
+                        <i class="fas fa-comment-medical me-2"></i>Doctor's Response
+                    </h6>
+                    <div class="response-box">
+                        <p class="response-text">${consultation.response}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function renderPendingRequests(consultations) {
+    const container = document.getElementById('pendingRequests');
+    if (consultations.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-clock"></i>
+                <p>No pending requests.</p>
+            </div>`;
+        return;
+    }
+
+    container.innerHTML = consultations.map(consultation => `
+        <div class="consultation-card pending">
+            <div class="card-header">
+                <span class="badge bg-warning">
+                    <i class="fas fa-clock me-1"></i>PENDING
+                </span>
+                <small class="text-muted">${formatDate(consultation.createdAt)}</small>
+            </div>
+            <div class="card-content">
+                <div class="request-section">
+                    <h6 class="section-title">
+                        <i class="fas fa-question-circle me-2"></i>Your Request
+                    </h6>
+                    <p class="request-text">${consultation.request}</p>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
+function showNotification(message, type) {
+    // Implement your notification system here
+    alert(message);
+}
+
+// Load consultations when page loads
+document.addEventListener('DOMContentLoaded', loadConsultations);
+</script>
+
+<style>
+:root {
+    --primary-color: #4361ee;
+    --success-color: #2ec4b6;
+    --warning-color: #ff9f1c;
+    --light-bg: #f8f9fa;
+    --border-radius: 12px;
+    --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+    --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
+}
+
+.dashboard-header {
+    background: white;
+    border-radius: var(--border-radius);
+    padding: 2rem;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 2rem;
+}
+
+.header-stats {
+    display: flex;
+    gap: 1rem;
+}
+
+.stat-card {
+    background: var(--light-bg);
+    padding: 1rem 1.5rem;
+    border-radius: var(--border-radius);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    min-width: 150px;
+}
+
+.stat-card.completed {
+    color: var(--success-color);
+}
+
+.stat-card.pending {
+    color: var(--warning-color);
+}
+
+.stat-card i {
+    font-size: 1.5rem;
+}
+
+.stat-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    line-height: 1;
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    color: #6c757d;
+}
+
+.consultation-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.consultation-card {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.consultation-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+}
+
+.card-header {
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--light-bg);
+}
+
+.card-content {
+    padding: 1.5rem;
+}
+
+.section-title {
+    color: #495057;
+    font-size: 0.9rem;
+    margin-bottom: 0.75rem;
+}
+
+.request-text, .response-text {
+    margin: 0;
+    line-height: 1.6;
+}
+
+.response-box {
+    background: var(--light-bg);
+    padding: 1rem;
+    border-radius: var(--border-radius);
+    border-left: 4px solid var(--primary-color);
+    margin-top: 0.5rem;
+}
+
+.badge {
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 3rem 2rem;
+    background: var(--light-bg);
+    border-radius: var(--border-radius);
+    color: #6c757d;
+}
+
+.empty-state i {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+}
+
+.empty-state p {
+    margin: 0;
+    font-size: 0.95rem;
+}
+
+@media (max-width: 768px) {
+    .dashboard-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .header-stats {
+        flex-direction: row;
+        justify-content: stretch;
+    }
+    
+    .stat-card {
+        flex: 1;
+    }
+}
+</style>
+
+<div th:replace="~{footer}"></div>

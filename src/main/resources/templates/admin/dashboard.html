@@ -1,0 +1,235 @@
+<div th:replace="~{admin/header-admin}"></div>
+
+<div th:fragment="content">
+    <div class="container-fluid py-2">
+        <div class="row mb-4">
+            <div class="col-xl-3 col-sm-6 mb-3">
+                <div class="card text-white bg-primary h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-uppercase mb-1">Total Children</h6>
+                                <h2 class="display-6 mb-0" id="totalChildren">0</h2>
+                            </div>
+                            <i class="fas fa-child fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-sm-6 mb-3">
+                <div class="card text-white bg-success h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-uppercase mb-1">Total Revenue</h6>
+                                <h2 class="display-6 mb-0">
+                                    <span id="totalRevenue">0</span>
+                                    <small>VND</small>
+                                </h2>
+                            </div>
+                            <i class="fas fa-money-bill-wave fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12 mb-4">
+                <div class="card shadow-sm rounded-3 border-0">
+                    <div class="card-header bg-gradient-primary text-white border-0 py-2">
+                        <h6 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Statistics</h6>
+                    </div>
+                    <div class="card-body">
+                        <ul class="nav nav-tabs" id="chartTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="gender-tab" data-bs-toggle="tab" data-bs-target="#gender" type="button" role="tab">
+                                    <i class="fas fa-venus-mars me-2"></i>Gender
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="age-tab" data-bs-toggle="tab" data-bs-target="#age" type="button" role="tab">
+                                    <i class="fas fa-birthday-cake me-2"></i>Age
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="revenue-tab" data-bs-toggle="tab" data-bs-target="#revenue" type="button" role="tab">
+                                    <i class="fas fa-chart-line me-2"></i>Revenue
+                                </button>
+                            </li>
+                        </ul>
+
+                        <div class="tab-content mt-3" id="chartTabContent">
+                            <div class="tab-pane fade show active" id="gender" role="tabpanel">
+                                <canvas id="genderChart" height="100" max-height="100"></canvas>
+                            </div>
+                            <div class="tab-pane fade" id="age" role="tabpanel">
+                                <canvas id="ageChart" height="100" max-height="100"></canvas>
+                            </div>
+                            <div class="tab-pane fade" id="revenue" role="tabpanel">
+                                <canvas id="revenueChart" height="100" max-height="100"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        async function fetchDashboardData() {
+            try {
+                const response = await fetch('/api/dashboard/summary');
+                const data = await response.json();
+                updateDashboard(data);
+            } catch (error) {
+                console.error('Error fetching dashboard data:', error);
+            }
+        }
+
+        function updateDashboard(data) {
+            document.getElementById('totalChildren').textContent = data.totalChildren;
+            document.getElementById('totalRevenue').textContent = 
+                new Intl.NumberFormat('en-US').format(data.totalRevenue);
+
+            initGenderChart(data.childrenByGender);
+            initAgeChart(data.childrenByAge);
+            initRevenueChart(data.revenueByMonth);
+        }
+
+        function initGenderChart(genderData) {
+            new Chart(document.getElementById('genderChart'), {
+                type: 'pie',
+                data: {
+                    labels: Object.keys(genderData),
+                    datasets: [{
+                        data: Object.values(genderData),
+                        backgroundColor: ['#36A2EB', '#FF6384']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    aspectRatio: 2,
+                    plugins: {
+                        legend: { 
+                            position: 'top',
+                            labels: {
+                                boxWidth: 15,
+                                font: {
+                                    size: 15
+                                }
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Gender Distribution',
+                            font: {
+                                size: 18
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function initAgeChart(ageData) {
+            new Chart(document.getElementById('ageChart'), {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(ageData),
+                    datasets: [{
+                        label: 'Number of Children',
+                        data: Object.values(ageData),
+                        backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { stepSize: 1 }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        title: {
+                            display: true,
+                            text: 'Age Distribution'
+                        }
+                    }
+                }
+            });
+        }
+
+        function initRevenueChart(revenueData) {
+            const months = Object.keys(revenueData);
+            const revenues = Object.values(revenueData);
+            
+            const formattedMonths = months.map(month => {
+                const [year, monthNum] = month.split('-');
+                return `Month ${monthNum}/${year}`;
+            });
+
+            new Chart(document.getElementById('revenueChart'), {
+                type: 'line',
+                data: {
+                    labels: formattedMonths,
+                    datasets: [{
+                        label: 'Revenue (VND)',
+                        data: revenues,
+                        backgroundColor: 'rgba(40, 167, 69, 0.2)',
+                        borderColor: 'rgba(40, 167, 69, 1)',
+                        borderWidth: 2,
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: value => new Intl.NumberFormat('en-US').format(value) + ' VND'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { position: 'top' },
+                        title: {
+                            display: true,
+                            text: 'Revenue Last 12 Months'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: context => 'Revenue: ' + 
+                                    new Intl.NumberFormat('en-US').format(context.raw) + ' VND'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', fetchDashboardData);
+
+        function setupAutoRefresh(interval = 300000) {
+            setInterval(fetchDashboardData, interval);
+        }
+
+        setupAutoRefresh();
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</div>
+
+<div th:replace="~{admin/footer-admin}"></div>

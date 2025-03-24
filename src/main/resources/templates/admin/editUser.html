@@ -1,54 +1,71 @@
 <div th:replace="~{admin/header-admin}"></div>
 
-
 <header class="ex-header mt-5">
     <div class="container">
         <div class="row">
             <div class="col-xl-10 offset-xl-1">
                 <h1 class="text-center">Edit User</h1>
-            </div> <!-- end of col -->
-        </div> <!-- end of row -->
-    </div> <!-- end of container -->
+            </div> 
+        </div> 
+    </div>
 </header>
 
 <div class="container">
     <div class="row">
         <div class="col-xl-8 offset-xl-2">
             <div class="form-container">
-                <form th:action="@{/manageUsers/update}" th:object="${user}" method="post">
-                    <input type="hidden" th:field="*{id}" />
+                <div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3"></div>
 
+                <form id="userForm">
+                    <input type="hidden" id="userId" th:value="${user.id}" />
+
+                    <!-- Username -->
                     <div class="mb-3">
                         <label for="username" class="form-label">Username</label>
-                        <input type="text" class="form-control" id="username" th:field="*{username}" required>
+                        <input type="text" class="form-control" id="username" th:value="${user.username}" required>
+                        <div class="invalid-feedback" id="usernameError"></div>
                     </div>
 
+                    <!-- Full Name -->
                     <div class="mb-3">
                         <label for="fullName" class="form-label">Full Name</label>
-                        <input type="text" class="form-control" id="fullName" th:field="*{fullName}" required>
+                        <input type="text" class="form-control" id="fullName" th:value="${user.fullName}" required>
                     </div>
 
+                    <!-- Email -->
                     <div class="mb-3">
                         <label for="email" class="form-label">Email</label>
-                        <input type="email" class="form-control" id="email" th:field="*{email}" required>
+                        <input type="email" class="form-control" id="email" th:value="${user.email}" required>
+                        <div class="invalid-feedback" id="emailError"></div>
                     </div>
 
+                    <!-- Phone Number -->
                     <div class="mb-3">
-                        <label for="phoneNumber" class="form-label">Phone Number</label>
-                        <input type="text" class="form-control" id="phoneNumber" th:field="*{phoneNumber}">
+                        <label for="phone" class="form-label">Phone Number</label>
+                        <input type="text" class="form-control" id="phone" th:value="${user.phoneNumber}">
+                        <div class="invalid-feedback" id="phoneError"></div>
                     </div>
 
+                    <!-- Password -->
+                    <div class="mb-3">
+                        <label for="password" class="form-label">New Password (optional)</label>
+                        <input type="password" class="form-control" id="password">
+                    </div>
+
+                    <!-- Role -->
                     <div class="mb-3">
                         <label for="role" class="form-label">Role</label>
-                        <select class="form-select" id="role" th:field="*{role}">
-                            <option th:each="roleOpt : ${availableRoles}" th:value="${roleOpt}"
-                                th:text="${roleOpt.name()}" th:selected="${roleOpt == user.role}">
+                        <select class="form-select" id="role" th:value="${user.role}">
+                            <option th:each="roleOpt : ${availableRoles}" 
+                                    th:value="${roleOpt}"
+                                    th:text="${roleOpt.name()}"
+                                    th:selected="${roleOpt == user.role}">
                             </option>
                         </select>
                     </div>
 
                     <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                        <a th:href="@{/manageUsers}" class="btn btn-secondary me-md-2">Cancel</a>
+                        <a href="/manageUsers" class="btn btn-secondary me-md-2">Cancel</a>
                         <button type="submit" class="btn btn-primary">Save Changes</button>
                     </div>
                 </form>
@@ -56,5 +73,119 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+    const userId = document.getElementById('userId').value;
+
+    const debounce = (func, delay = 500) => {
+        let timeoutId;
+        return (...args) => {
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(() => func.apply(this, args), delay);
+        };
+    };
+
+    const showToast = (message, type = 'success') => {
+        const toast = document.createElement('div');
+        toast.className = `toast align-items-center text-white bg-${type} border-0`;
+        toast.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body">${message}</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        `;
+        document.getElementById('toastContainer').appendChild(toast);
+        new bootstrap.Toast(toast).show();
+    };
+
+    const checkField = async (field, value) => {
+        if (!value) return true;
+        
+        try {
+            const response = await fetch(`/api/users/check-${field}-edit?${field}=${encodeURIComponent(value)}&userId=${userId}`, {
+                headers: {
+                    'Accept': 'application/json',
+                    ...(csrfToken && csrfHeader ? { [csrfHeader]: csrfToken } : {})
+                }
+            });
+            
+            if (!response.ok) throw new Error('Network response was not ok');
+            
+            const data = await response.json();
+            const input = document.getElementById(field);
+            const errorDiv = document.getElementById(`${field}Error`);
+            
+            if (!data.available) {
+                errorDiv.textContent = `This ${field} is already taken`;
+                input.classList.add('is-invalid');
+                return false;
+            }
+            
+            input.classList.remove('is-invalid');
+            return true;
+        } catch (error) {
+            console.error('Error:', error);
+            return false;
+        }
+    };
+
+    // Real-time validation
+    ['username', 'email', 'phone'].forEach(field => {
+        const input = document.getElementById(field);
+        const originalValue = input.value;
+        
+        input.addEventListener('input', debounce(async (e) => {
+            const newValue = e.target.value.trim();
+            if (newValue !== originalValue) {
+                await checkField(field, newValue);
+            }
+        }));
+    });
+
+    // Form submission
+    document.getElementById('userForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const formData = {
+            id: userId,
+            username: document.getElementById('username').value,
+            fullName: document.getElementById('fullName').value,
+            email: document.getElementById('email').value,
+            phoneNumber: document.getElementById('phone').value,
+            role: document.getElementById('role').value,
+            password: document.getElementById('password').value || undefined,
+        };
+
+        try {
+            const response = await fetch(`/api/users/${userId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    ...(csrfToken && csrfHeader ? { [csrfHeader]: csrfToken } : {})
+                },
+                body: JSON.stringify(formData)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to update user');
+            }
+
+            showToast('User updated successfully', 'success');
+            setTimeout(() => {
+                window.location.href = '/manageUsers';
+            }, 1500);
+
+        } catch (error) {
+            console.error('Error:', error);
+            showToast(error.message || 'Failed to update user', 'danger');
+        }
+    });
+});
+</script>
 
 <div th:replace="~{admin/footer-admin}"></div>

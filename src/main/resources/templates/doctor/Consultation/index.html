@@ -1,0 +1,656 @@
+<div th:replace="~{header}"></div>
+
+<div class="dashboard-container py-5">
+    <div class="container mb-5">
+        <div class="dashboard-header">
+            <div class="dashboard-title">
+                <h2 class="fw-bold">
+                    <i class="fas fa-stethoscope me-2"></i>Medical Consultations
+                </h2>
+                <p class="text-muted">Review patient consultations and provide professional responses</p>
+            </div>
+            
+            <div class="dashboard-actions">
+                <div class="btn-group filter-group">
+                    <button onclick="loadConsultations('ALL')" class="btn btn-light active">
+                        <i class="fas fa-list-ul me-1"></i> All
+                    </button>
+                    <button onclick="loadConsultations('PENDING')" class="btn btn-light">
+                        <i class="fas fa-clock me-1"></i> Pending
+                    </button>
+                    <button onclick="loadConsultations('COMPLETED')" class="btn btn-light">
+                        <i class="fas fa-check-circle me-1"></i> Completed
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="row g-4" id="consultationsContainer">
+            <!-- Consultations will be loaded here -->
+        </div>
+    </div>
+</div>
+
+<!-- Modal template -->
+<div class="modal fade" id="growthModal">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-child me-2"></i>
+                    Child Growth Records
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="growth-records" id="growthRecordsContainer">
+                    <!-- Growth records will be loaded here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// CSRF setup
+let csrfToken, csrfHeader;
+try {
+    csrfToken = document.querySelector("meta[name='_csrf']")?.content || '';
+    csrfHeader = document.querySelector("meta[name='_csrf_header']")?.content || 'X-CSRF-TOKEN';
+} catch (e) {
+    console.warn('CSRF meta tags not found');
+    csrfToken = '';
+    csrfHeader = 'X-CSRF-TOKEN';
+}
+
+async function loadConsultations(status = 'ALL') {
+    try {
+        const url = status === 'ALL' 
+            ? '/api/consultations/doctor'
+            : `/api/consultations/doctor/${status}`;
+            
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Failed to fetch consultations');
+        const consultations = await response.json();
+        console.log(consultations);
+        renderConsultations(consultations);
+        updateActiveButton(status);
+    } catch (error) {
+        console.error('Error:', error);
+        showNotification('Failed to load consultations', 'danger');
+    }
+}
+
+function renderConsultations(consultations) {
+    const container = document.getElementById('consultationsContainer');
+    
+    if (consultations.length === 0) {
+        container.innerHTML = `
+            <div class="col-12">
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <i class="fas fa-inbox"></i>
+                    </div>
+                    <h3>No consultations found</h3>
+                    <p>There are currently no consultations to display.</p>
+                </div>
+            </div>`;
+        return;
+    }
+
+    container.innerHTML = consultations.map(consultation => `
+        <div class="col-lg-6">
+            <div class="consultation-card">
+                <div class="card-header">
+                    <div class="meta-info">
+                        <div class="date">
+                            <i class="far fa-calendar me-2"></i>
+                            <span>${new Date(consultation.createdAt).toLocaleDateString('en-US', {
+                                day: '2-digit',
+                                month: 'short',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            })}</span>
+                        </div>
+                        <div class="child-info">
+                            <span class="child-name">
+                                <i class="fas fa-child me-1"></i> Child ID: 
+                                <span>${consultation.childId}</span>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="actions">
+                        <button class="btn-growth" 
+                                onclick="loadGrowthRecords(${consultation.childId})">
+                            <i class="fas fa-chart-line"></i>
+                            <span>Growth Data</span>
+                        </button>
+                        <span class="status-pill ${consultation.status === 'PENDING' ? 'status-pending' : 'status-completed'}">
+                            ${consultation.status}
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="card-content">
+                    <div class="request-section">
+                        <h6 class="section-title">
+                            <i class="fas fa-comment-medical me-2"></i>Patient Request
+                        </h6>
+                        <div class="message request-message">
+                            <p>${consultation.request}</p>
+                        </div>
+                    </div>
+
+                    <div class="response-section">
+                        <h6 class="section-title">
+                            <i class="fas fa-reply me-2"></i>Doctor Response
+                        </h6>
+                        
+                        ${consultation.response ? `
+                            <div class="message response-message">
+                                <p>${consultation.response}</p>
+                            </div>
+                        ` : `
+                            <div class="response-form-container">
+                                <div class="form-floating mb-3">
+                                    <textarea class="form-control" id="response-${consultation.id}" 
+                                              placeholder="Enter your medical advice" rows="4"></textarea>
+                                    <label for="response-${consultation.id}">Enter your professional advice</label>
+                                </div>
+                                <button onclick="submitResponse(${consultation.id})" class="btn-respond">
+                                    <i class="fas fa-paper-plane me-2"></i>Send Response
+                                </button>
+                            </div>
+                        `}
+                    </div>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+async function submitResponse(consultationId) {
+    const responseText = document.getElementById(`response-${consultationId}`).value;
+    if (!responseText.trim()) {
+        showNotification('Please enter a response', 'warning');
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/consultations/${consultationId}/respond`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                [csrfHeader]: csrfToken
+            },
+            body: JSON.stringify({ response: responseText })
+        });
+
+        if (!response.ok) throw new Error('Failed to submit response');
+        
+        showNotification('Response submitted successfully', 'success');
+        await loadConsultations('ALL'); // Reload all consultations
+    } catch (error) {
+        console.error('Error:', error);
+        showNotification('Failed to submit response', 'danger');
+    }
+}
+
+async function loadGrowthRecords(childId) {
+    try {
+        const response = await fetch(`/api/growth-records/child/${childId}`);
+        if (!response.ok) throw new Error('Failed to fetch growth records');
+        const records = await response.json();
+        
+        renderGrowthRecords(records);
+        const modal = new bootstrap.Modal(document.getElementById('growthModal'));
+        modal.show();
+    } catch (error) {
+        console.error('Error:', error);
+        showNotification('Failed to load growth records', 'danger');
+    }
+}
+
+function renderGrowthRecords(records) {
+    const container = document.getElementById('growthRecordsContainer');
+    
+    if (!records || records.length === 0) {
+        container.innerHTML = `
+            <div class="empty-records">
+                <i class="fas fa-chart-area"></i>
+                <p>No growth records found for this child.</p>
+            </div>`;
+        return;
+    }
+
+    container.innerHTML = `
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Height (cm)</th>
+                        <th>Weight (kg)</th>
+                        <th>Record Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${records.map(record => `
+                        <tr>
+                            <td>${record.height}</td>
+                            <td>${record.weight}</td>
+                            <td>${new Date(record.recordDate).toLocaleDateString()}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        </div>`;
+}
+
+function updateActiveButton(status) {
+    document.querySelectorAll('.filter-group .btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    document.querySelector(`button[onclick*="${status}"]`).classList.add('active');
+}
+
+function showNotification(message, type) {
+    // Implement your notification system here
+    // You can use the same notification system from previous examples
+}
+
+// Load consultations when page loads
+document.addEventListener('DOMContentLoaded', () => loadConsultations('ALL'));
+</script>
+
+<style>
+:root {
+    --primary-color: #4361ee;
+    --primary-light: #eef2ff;
+    --secondary-color: #2ec4b6;
+    --warning-color: #ff9f1c;
+    --danger-color: #e71d36;
+    --success-color: #2ec4b6;
+    --dark-color: #011627;
+    --text-color: #424242;
+    --text-muted: #6c757d;
+    --bg-light: #f8f9fa;
+    --border-color: #e9ecef;
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+    --shadow-md: 0 5px 15px rgba(0,0,0,0.1);
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-pill: 50px;
+    --transition: all 0.3s ease;
+}
+
+body {
+    color: var(--text-color);
+    background-color: #f5f7ff;
+}
+
+.dashboard-container {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    background-color: white;
+    padding: 2rem;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+}
+
+.dashboard-title h2 {
+    font-size: 1.75rem;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+}
+
+.dashboard-title p {
+    font-size: 1rem;
+    margin-bottom: 0;
+}
+
+.dashboard-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.filter-group {
+    border-radius: var(--radius-pill);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+}
+
+.filter-group .btn {
+    border: none;
+    padding: 0.6rem 1.2rem;
+    font-weight: 500;
+    color: var(--text-color);
+    transition: var(--transition);
+}
+
+.filter-group .btn:hover {
+    background-color: var(--primary-light);
+    color: var(--primary-color);
+}
+
+.filter-group .btn.active {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.consultation-card {
+    background-color: white;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    transition: var(--transition);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.consultation-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-5px);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 1.25rem;
+    background-color: white;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.meta-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.date, .child-info {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+}
+
+.child-name {
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+.actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.btn-growth {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background-color: var(--primary-light);
+    color: var(--primary-color);
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-pill);
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.btn-growth:hover {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.status-pill {
+    padding: 0.4rem 1rem;
+    border-radius: var(--radius-pill);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-pending {
+    background-color: #fff8e6;
+    color: #b86e00;
+    border: 1px solid #ffe4b3;
+}
+
+.status-completed {
+    background-color: #e6fff9;
+    color: #007b6b;
+    border: 1px solid #b3ffe7;
+}
+
+.card-content {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    flex-grow: 1;
+}
+
+.section-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: var(--text-color);
+}
+
+.message {
+    padding: 1.25rem;
+    border-radius: var(--radius-md);
+    background-color: var(--bg-light);
+    font-size: 0.95rem;
+}
+
+.message p {
+    margin-bottom: 0;
+    line-height: 1.6;
+}
+
+.request-message {
+    background-color: #fff9f0;
+    border-left: 4px solid var(--warning-color);
+}
+
+.response-message {
+    background-color: #f0fff9;
+    border-left: 4px solid var(--success-color);
+}
+
+.response-form-container {
+    background-color: #f8f9ff;
+    padding: 1.25rem;
+    border-radius: var(--radius-md);
+}
+
+.form-floating {
+    margin-bottom: 1rem;
+}
+
+.form-floating textarea {
+    height: 120px;
+    resize: none;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 1rem;
+    font-size: 0.95rem;
+}
+
+.form-floating textarea:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.25rem rgba(67, 97, 238, 0.1);
+}
+
+.btn-respond {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius-md);
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+    width: 100%;
+}
+
+.btn-respond:hover {
+    background-color: #334bcc;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+}
+
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+    text-align: center;
+    background-color: white;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+}
+
+.empty-icon {
+    font-size: 3rem;
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+}
+
+.empty-state h3 {
+    font-size: 1.5rem;
+    margin-bottom: 0.75rem;
+    color: var(--text-color);
+}
+
+.empty-state p {
+    color: var(--text-muted);
+    max-width: 400px;
+}
+
+.modal-content {
+    border: none;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+}
+
+.modal-header {
+    background-color: var(--primary-light);
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.modal-title {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.growth-records {
+    width: 100%;
+}
+
+.empty-records {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 2rem;
+    text-align: center;
+}
+
+.empty-records i {
+    font-size: 2.5rem;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+}
+
+.empty-records p {
+    color: var(--text-muted);
+}
+
+.table {
+    width: 100%;
+    margin-bottom: 0;
+}
+
+.table thead th {
+    background-color: var(--bg-light);
+    color: var(--text-color);
+    font-weight: 600;
+    padding: 1rem;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.table tbody td {
+    padding: 1rem;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.table tbody tr:hover {
+    background-color: var(--bg-light);
+}
+
+@media (max-width: 992px) {
+    .dashboard-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .dashboard-actions {
+        width: 100%;
+        justify-content: flex-start;
+    }
+    
+    .card-header {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .actions {
+        width: 100%;
+        justify-content: space-between;
+    }
+}
+
+@media (max-width: 768px) {
+    .filter-group {
+        width: 100%;
+        display: flex;
+    }
+    
+    .filter-group .btn {
+        flex: 1;
+    }
+}
+</style>
+
+<div th:replace="~{footer}"></div>

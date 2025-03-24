@@ -1,0 +1,120 @@
+<div th:replace="~{admin/header-admin}"></div>
+
+<header class="ex-header mt-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-xl-10 offset-xl-1">
+                <h1 class="text-center">Create Consultation</h1>
+            </div> <!-- end of col -->
+        </div> <!-- end of row -->
+    </div> <!-- end of container -->
+</header>
+
+<div class="container">
+    <div class="row">
+        <div class="col-xl-8 offset-xl-2">
+            <div class="form-container">
+                <form id="consultationForm" th:action="@{/manageConsultationsAdmin/create}" th:object="${consultation}" method="post">
+
+                    <div class="mb-3">
+                        <label for="memberId" class="form-label">Member</label>
+                        <select class="form-select" id="memberId" name="memberId" required>
+                            <option value="">-- Select Member --</option>
+                            <option th:each="member : ${members}" 
+                                    th:value="${member.id}" 
+                                    th:text="${member.fullName}">
+                            </option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="childId" class="form-label">Child</label>
+                        <select class="form-select" id="childId" name="childId" required>
+                            <option value="">-- Select Child --</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="request" class="form-label">Request</label>
+                        <textarea class="form-control" id="request" th:field="*{request}" rows="3" required></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="response" class="form-label">Response</label>
+                        <textarea class="form-control" id="response" th:field="*{response}" rows="3"></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="status" class="form-label">Status</label>
+                        <select class="form-select" id="status" th:field="*{status}">
+                            <option value="PENDING">PENDING</option>
+                            <option value="COMPLETED">COMPLETED</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="doctorId" class="form-label">Doctor</label>
+                        <select class="form-select" id="doctorId" name="doctorId" required>
+                            <option value="">-- Select Doctor --</option>
+                            <option th:each="doctor : ${doctors}" 
+                                    th:value="${doctor.id}" 
+                                    th:text="${doctor.fullName}">
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a th:href="@{/manageConsultationsAdmin}" class="btn btn-secondary me-md-2">
+                            <i class="fas fa-arrow-left"></i> Back
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Create Consultation
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script th:inline="javascript">
+document.addEventListener('DOMContentLoaded', function() {
+    const allChildrenByMember = /*[[${allChildrenMap}]]*/ {};
+    
+    const memberSelect = document.getElementById('memberId');
+    const childSelect = document.getElementById('childId');
+    
+    memberSelect.addEventListener('change', function() {
+        const memberId = this.value;
+        
+        childSelect.innerHTML = '';
+        
+        const defaultOption = document.createElement('option');
+        defaultOption.value = '';
+        
+        if (!memberId) {
+            defaultOption.textContent = '-- Select Member First --';
+            childSelect.appendChild(defaultOption);
+            return;
+        }
+        
+        const children = allChildrenByMember[memberId] || [];
+        
+        if (children.length === 0) {
+            defaultOption.textContent = '-- No Children Found --';
+        } else {
+            defaultOption.textContent = '-- Select Child --';
+        }
+        childSelect.appendChild(defaultOption);
+        
+        children.forEach(child => {
+            const option = document.createElement('option');
+            option.value = child.id;
+            option.textContent = `${child.fullName}`;
+            childSelect.appendChild(option);
+        });
+    });
+});
+</script>
+
+<div th:replace="~{admin/footer-admin}"></div>

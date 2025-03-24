@@ -1,6 +1,9 @@
 <div th:replace="~{header}"></div>
 
 <div class="container py-5">
+    <input type="hidden" id="childrenId" th:value="${childrenId}">
+    <canvas id="growthChart" style="max-height: 400px;"></canvas>
+
     <div class="row">
         <div class="col-md-4">
             <div class="card shadow-sm h-100 sticky-top" style="top: 20px;">
@@ -8,22 +11,23 @@
                     <h3 class="text-primary fw-bold mb-4">
                         <i class="fas fa-child me-2"></i>Child Information
                     </h3>
+
                     <div class="child-info">
                         <div class="mb-3">
                             <label class="text-muted small">Full Name</label>
-                            <h5 class="mb-0" th:text="${children.fullName}"></h5>
+                            <h5 class="mb-0" id="childFullName"></h5>
                         </div>
                         <div class="mb-3">
                             <label class="text-muted small">Birth Date</label>
-                            <h5 class="mb-0" th:text="${children.birthDate}"></h5>
+                            <h5 class="mb-0" id="childBirthDate"></h5>
                         </div>
                         <div class="mb-3">
                             <label class="text-muted small">Gender</label>
-                            <h5 class="mb-0" th:text="${children.gender}"></h5>
+                            <h5 class="mb-0" id="childGender"></h5>
                         </div>
                     </div>
                     <div class="mt-4">
-                        <a th:href="@{/children}" class="btn btn-outline-secondary w-100">
+                        <a href="/children" class="btn btn-outline-secondary w-100">
                             <i class="fas fa-arrow-left me-2"></i>Back to Children
                         </a>
                     </div>
@@ -43,44 +47,7 @@
             </div>
 
             <div class="growth-records-container">
-                <div th:each="growthRecord : ${growthRecords}" class="card mb-3 shadow-sm hover-shadow transition">
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-9">
-                                <div class="d-flex flex-wrap gap-4">
-                                    <div>
-                                        <label class="text-muted small">Record Date</label>
-                                        <h6 class="mb-0" th:text="${growthRecord.recordDate}"></h6>
-                                    </div>
-                                    <div>
-                                        <label class="text-muted small">Weight</label>
-                                        <h6 class="mb-0" th:text="${growthRecord.weight} + ' kg'"></h6>
-                                    </div>
-                                    <div>
-                                        <label class="text-muted small">Height</label>
-                                        <h6 class="mb-0" th:text="${growthRecord.height} + ' cm'"></h6>
-                                    </div>
-                                    <div>
-                                        <label class="text-muted small">BMI</label>
-                                        <h6 class="mb-0" th:text="${growthRecord.bmi}"></h6>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="d-flex gap-2 justify-content-end">
-                                    <a th:href="@{/children/growth-records/{childrenId}/edit/{id}(childrenId=${childrenId}, id=${growthRecord.id})}" 
-                                       class="btn btn-outline-primary btn-sm">
-                                       <i class="fas fa-edit"></i>
-                                    </a>
-                                    <a th:href="@{/children/growth-records/{childrenId}/delete/{id}(childrenId=${childrenId}, id=${growthRecord.id})}" 
-                                       class="btn btn-outline-danger btn-sm">
-                                       <i class="fas fa-trash"></i>
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <!-- Records will be loaded here -->
             </div>
         </div>
     </div>
@@ -114,4 +81,325 @@
 .btn-sm {
     padding: 0.25rem 0.5rem;
 }
+
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+    min-width: 300px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    border-radius: 8px;
+    opacity: 0;
+    transform: translateX(100%);
+    animation: slideIn 0.3s forwards;
+}
+
+@keyframes slideIn {
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideOut {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+}
+
+.notification.hiding {
+    animation: slideOut 0.3s forwards;
+}
 </style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script th:inline="javascript">
+let csrfToken, csrfHeader;
+try {
+    csrfToken = document.querySelector("meta[name='_csrf']")?.content || '';
+    csrfHeader = document.querySelector("meta[name='_csrf_header']")?.content || 'X-CSRF-TOKEN';
+} catch (e) {
+    console.warn('CSRF meta tags not found');
+    csrfToken = '';
+    csrfHeader = 'X-CSRF-TOKEN';
+}
+
+const childId = document.getElementById('childrenId').value;
+let child = {};
+
+const whoData = {
+    male: {
+        weight: [3.3, 6.0, 7.8, 9.2, 10.2, 11.1, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, 19.0, 20.0, 21.0, 22.0, 23.0, 24.0], // Cân nặng (kg) từ 0-18 tuổi
+        height: [50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 168, 172, 175, 178, 180, 182, 184] // Chiều cao (cm) từ 0-18 tuổi
+    },
+    female: {
+        weight: [3.2, 5.5, 7.0, 8.2, 9.0, 9.8, 10.5, 11.5, 12.5, 13.5, 14.5, 15.5, 16.5, 17.5, 18.5, 19.5, 20.5, 21.5, 22.5], // Cân nặng (kg) từ 0-18 tuổi
+        height: [49, 58, 68, 78, 88, 98, 108, 118, 128, 138, 148, 158, 165, 168, 170, 172, 174, 175, 176] // Chiều cao (cm) từ 0-18 tuổi
+    }
+};
+
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+}
+
+async function initialize() {
+    try {
+        const childResponse = await fetch(`/api/children/${childId}`);
+        if (!childResponse.ok) throw new Error('Failed to fetch child data');
+        child = await childResponse.json();
+        
+        child.birthDate = new Date(child.birthDate);
+        
+        document.getElementById('childFullName').textContent = child.fullName;
+        document.getElementById('childBirthDate').textContent = formatDate(child.birthDate);
+        document.getElementById('childGender').textContent = child.gender;
+        
+        await loadGrowthRecords();
+    } catch (error) {
+        console.error('Error:', error);
+        showError('Failed to initialize data');
+    }
+}
+
+async function loadGrowthRecords() {
+    try {
+        const response = await fetch(`/api/growth-records/child/${childId}`);
+        if (!response.ok) throw new Error('Failed to fetch growth records');
+        const records = await response.json();
+        renderGrowthRecords(records);
+        initializeChart(records);
+        calculateWarnings(records);
+    } catch (error) {
+
+    }
+}
+
+async function deleteRecord(recordId) {
+    if (!confirm('Are you sure you want to delete this record?')) return;
+    
+    try {
+        const response = await fetch(`/api/growth-records/${recordId}`, {
+            method: 'DELETE',
+            headers: {
+                [csrfHeader]: csrfToken
+            }
+        });
+        
+        if (!response.ok) throw new Error('Failed to delete record');
+        
+        showNotification('Record deleted successfully', 'success');
+        await loadGrowthRecords();
+    } catch (error) {
+        console.error('Error:', error);
+        showError('Failed to delete record');
+    }
+}
+
+function showNotification(message, type = 'success') {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show notification`;
+    alertDiv.innerHTML = `
+        <div class="d-flex align-items-center">
+            <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} me-2"></i>
+            <div>${message}</div>
+        </div>
+        <button type="button" class="btn-close" onclick="dismissNotification(this.parentElement)"></button>
+    `;
+    document.body.appendChild(alertDiv);
+    
+    setTimeout(() => {
+        dismissNotification(alertDiv);
+    }, 3000);
+}
+
+function dismissNotification(alertDiv) {
+    alertDiv.classList.add('hiding');
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 300);
+}
+
+function renderGrowthRecords(records) {
+    const container = document.querySelector('.growth-records-container');
+    container.innerHTML = records.map(record => `
+        <div class="card mb-3 shadow-sm hover-shadow transition mt-1">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-9">
+                        <div class="d-flex flex-wrap gap-4">
+                            <div>
+                                <label class="text-muted small">Record Date</label>
+                                <h6 class="mb-0">${formatDate(record.recordDate)}</h6>
+                            </div>
+                            <div>
+                                <label class="text-muted small">Weight</label>
+                                <h6 class="mb-0">${record.weight} kg</h6>
+                            </div>
+                            <div>
+                                <label class="text-muted small">Height</label>
+                                <h6 class="mb-0">${record.height} cm</h6>
+                            </div>
+                        </div>
+
+                        <!-- Phần hiển thị cảnh báo -->
+                        <div class="warning-message mt-3" style="display: none;">
+                            <div class="alert alert-warning p-2 mb-0">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <span class="warning-text"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="d-flex gap-2 justify-content-end">
+                            <a href="/children/growth-records/${childId}/edit/${record.id}" 
+                               class="btn btn-outline-primary btn-sm">
+                               <i class="fas fa-edit"></i>
+                            </a>
+                            <button onclick="deleteRecord(${record.id})" 
+                                    class="btn btn-outline-danger btn-sm">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function initializeChart(records) {
+    const dates = records.map(record => formatDate(record.recordDate));
+    const weights = records.map(record => parseFloat(record.weight));
+    const heights = records.map(record => parseFloat(record.height));
+
+    const whoWeights = records.map(record => {
+        const recordDate = new Date(record.recordDate);
+        const ageMonths = getAgeInMonths(recordDate);
+        return getWHOValue(ageMonths, 'weight');
+    });
+
+    const whoHeights = records.map(record => {
+        const recordDate = new Date(record.recordDate);
+        const ageMonths = getAgeInMonths(recordDate);
+        return getWHOValue(ageMonths, 'height');
+    });
+
+    const ctx = document.getElementById("growthChart").getContext("2d");
+    new Chart(ctx, {
+        type: "line",
+        data: {
+            labels: dates,
+            datasets: [
+                {
+                    label: "Weight (kg)",
+                    data: weights,
+                    borderColor: "blue",
+                    fill: false
+                },
+                {
+                    label: "Height (cm)",
+                    data: heights,
+                    borderColor: "green",
+                    fill: false
+                },
+                {
+                    label: "WHO Weight (kg)",
+                    data: whoWeights,
+                    borderColor: "rgba(0, 0, 255, 0.3)",
+                    borderDash: [5, 5],
+                    fill: false
+                },
+                {
+                    label: "WHO Height (cm)",
+                    data: whoHeights,
+                    borderColor: "rgba(0, 255, 0, 0.3)",
+                    borderDash: [5, 5],
+                    fill: false
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: { title: { display: true, text: "Date" } },
+                y: { title: { display: true, text: "Value" } }
+            }
+        }
+    });
+}
+
+function calculateWarnings(records) {
+    records.forEach((record, index) => {
+        const recordDate = new Date(record.recordDate);
+
+        const ageMonths = getAgeInMonths(recordDate);
+
+        const genderData = child.gender === 'Male' ? whoData.male : whoData.female;
+        const whoWeight = genderData.weight[Math.min(Math.floor(ageMonths / 12), 18)]; 
+        const whoHeight = genderData.height[Math.min(Math.floor(ageMonths / 12), 18)]; 
+
+        const weightDiff = (record.weight / whoWeight) * 100;
+        const heightDiff = (record.height / whoHeight) * 100;
+
+        const warningMessage = [];
+        if (weightDiff < 85) warningMessage.push("Weight is below the WHO standard.");
+        if (weightDiff > 115) warningMessage.push("Weight is above the WHO standard.");
+        if (heightDiff < 85) warningMessage.push("Height is below the WHO standard.");
+        if (heightDiff > 115) warningMessage.push("Height is above the WHO standard.");
+
+        const warningElement = document.querySelectorAll(".warning-message")[index];
+        if (warningElement) {
+            const alertDiv = warningElement.querySelector(".alert");
+            const warningText = warningElement.querySelector(".warning-text");
+
+            if (warningMessage.length > 0) {
+                warningElement.style.display = "block";
+                alertDiv.classList.remove("alert-success");
+                alertDiv.classList.add("alert-warning"); 
+                warningText.textContent = warningMessage.join(" ");     
+            } else {
+                warningElement.style.display = "block";
+                alertDiv.classList.remove("alert-warning");
+                alertDiv.classList.add("alert-success");
+                warningText.textContent = "Stable";
+            }
+        }
+    });
+}
+
+function getAgeInMonths(recordDate) {
+    if (typeof recordDate === 'string') {
+        recordDate = new Date(recordDate);
+    }
+    const diffMonths = (recordDate.getFullYear() - child.birthDate.getFullYear()) * 12;
+    return diffMonths + (recordDate.getMonth() - child.birthDate.getMonth());
+}
+
+function getWHOValue(ageMonths, metric) {
+    const genderData = child.gender === 'Male' ? whoData.male : whoData.female;
+    const index = Math.min(Math.floor(ageMonths / 12), 18);
+    return genderData[metric][index];
+}
+
+document.addEventListener('DOMContentLoaded', initialize);
+
+function showSuccess(message) {
+    showNotification(message, 'success');
+}
+
+function showError(message) {
+    showNotification(message, 'danger');
+}
+</script>

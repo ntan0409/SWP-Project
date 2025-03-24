@@ -1,0 +1,154 @@
+<div class="tab-pane" 
+     th:classappend="${page == 'profile-changepass' ? ' active show' : ''}" 
+     role="tabpanel">
+    <h4 class="card-title mb-4">Change Password</h4>
+    <div class="row">
+        <form id="changePasswordForm" onsubmit="changePassword(event)">
+            <div class="mb-4 form-floating">
+                <input type="password" class="form-control" id="currentPassword" placeholder="Current Password" name="currentPassword" autocomplete="off" required>
+                <label for="currentPassword">Current Password</label>
+            </div>
+
+            <div class="mb-4 form-floating">
+                <input type="password" class="form-control" id="newPassword" placeholder="New Password" name="newPassword" autocomplete="off" required>
+                <label for="newPassword">New Password</label>
+                <div class="password-requirements small text-muted mt-1">
+                    Password must contain:
+                    <ul class="mb-0">
+                        <li id="length-check">At least 8 characters</li>
+                        <li id="uppercase-check">At least one uppercase letter</li>
+                        <li id="lowercase-check">At least one lowercase letter</li>
+                        <li id="number-check">At least one number</li>
+                        <li id="special-check">At least one special character (!@#$%^&*)</li>
+                    </ul>
+                </div>
+                <div id="error-password-requirements" class="invalid-feedback"></div>
+            </div>
+
+            <div class="mb-4 form-floating">
+                <input type="password" class="form-control" id="confirmPassword" placeholder="Confirm New Password" name="confirmPassword" autocomplete="off" required>
+                <label for="confirmPassword">Confirm New Password</label>
+                <div id="error-password-match" class="invalid-feedback" style="display: none;"></div>
+            </div>
+
+            <button id="btnChangePass" type="submit" class="btn btn-primary">Change Password</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const userId = "[[${user.id}]]"; // Lấy ID người dùng từ Thymeleaf
+
+        function validatePassword(password) {
+            const minLength = 8;
+            const hasUpperCase = /[A-Z]/.test(password);
+            const hasLowerCase = /[a-z]/.test(password);
+            const hasNumbers = /\d/.test(password);
+            const hasSpecialChar = /[!@#$%^&*]/.test(password);
+            
+            // Update visual indicators
+            document.getElementById('length-check').style.color = 
+                password.length >= minLength ? 'green' : 'red';
+            document.getElementById('uppercase-check').style.color = 
+                hasUpperCase ? 'green' : 'red';
+            document.getElementById('lowercase-check').style.color = 
+                hasLowerCase ? 'green' : 'red';
+            document.getElementById('number-check').style.color = 
+                hasNumbers ? 'green' : 'red';
+            document.getElementById('special-check').style.color = 
+                hasSpecialChar ? 'green' : 'red';
+
+            return {
+                isValid: password.length >= minLength && hasUpperCase && 
+                         hasLowerCase && hasNumbers && hasSpecialChar,
+                errors: []
+            };
+        }
+
+        function checkPasswordMatch() {
+            let password = document.getElementById("newPassword").value;
+            let confirmPassword = document.getElementById("confirmPassword").value;
+            let errorMessage = document.getElementById("error-password-match");
+            let btnChangePass = document.getElementById("btnChangePass");
+            let passwordValidation = validatePassword(password);
+
+            // Kiểm tra yêu cầu mật khẩu
+            if (!passwordValidation.isValid) {
+                btnChangePass.disabled = true;
+                return false;
+            }
+
+            // Kiểm tra khớp mật khẩu
+            if (password !== confirmPassword) {
+                errorMessage.style.display = "block";
+                btnChangePass.disabled = true;
+                errorMessage.innerText = "Passwords do not match.";
+                document.getElementById("confirmPassword").classList.add("is-invalid");
+                return false;
+            } else {
+                errorMessage.style.display = "none";
+                document.getElementById("confirmPassword").classList.remove("is-invalid");
+                btnChangePass.disabled = false;
+                return true;
+            }
+        }
+
+        // Check password requirements on input
+        document.getElementById("newPassword").addEventListener("input", function() {
+            validatePassword(this.value);
+            checkPasswordMatch();
+        });
+
+        document.getElementById("confirmPassword").addEventListener("input", checkPasswordMatch);
+
+        // Prevent form submission if validation fails
+        document.querySelector("form").addEventListener("submit", function(e) {
+            const password = document.getElementById("newPassword").value;
+            const passwordValidation = validatePassword(password);
+            const passwordsMatch = checkPasswordMatch();
+
+            if (!passwordValidation.isValid || !passwordsMatch) {
+                e.preventDefault();
+            }
+        });
+    });
+
+    function changePassword(event) {
+    event.preventDefault(); // Ngăn chặn hành động mặc định của form
+
+    const userId = "[[${user.id}]]"; // Lấy ID từ Thymeleaf
+    const currentPassword = document.getElementById("currentPassword").value;
+    const newPassword = document.getElementById("newPassword").value;
+    const confirmPassword = document.getElementById("confirmPassword").value;
+
+    // Tạo FormData thay vì JSON
+    const formData = new URLSearchParams();
+    formData.append("currentPassword", currentPassword);
+    formData.append("newPassword", newPassword);
+    formData.append("confirmPassword", confirmPassword);
+
+    fetch(`/api/users/${userId}/change-password`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded' // Form URL encoded
+        },
+        body: formData.toString()
+    })
+    .then(response => response.json()) // Chuyển đổi phản hồi thành JSON
+    .then(data => {
+        if (data.error) {
+            alert("Error: " + data.error);
+        } else {
+            alert("Password changed successfully!");
+            // Có thể reset form sau khi đổi mật khẩu thành công
+            document.getElementById("changePasswordForm").reset();
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to change password. Please try again.');
+    });
+}
+
+</script>
