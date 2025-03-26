@@ -42,6 +42,24 @@ try {
     csrfToken = '';
     csrfHeader = 'X-CSRF-TOKEN';
 }
+// Lấy ngày hiện tại và định dạng nó thành YYYY-MM-DD
+const today = new Date();
+const dd = String(today.getDate()).padStart(2, '0');
+const mm = String(today.getMonth() + 1).padStart(2, '0'); // January is 0!
+const yyyy = today.getFullYear();
+const maxDate = yyyy + '-' + mm + '-' + dd;
+
+// Đặt giá trị max cho input
+document.getElementById('birthDate').setAttribute('max', maxDate);
+
+// Thêm sự kiện để kiểm tra khi người dùng thay đổi giá trị
+document.getElementById('birthDate').addEventListener('change', function(e) {
+    const selectedDate = new Date(this.value);
+    if (selectedDate > today) {
+        alert('Birth date cannot be in the future');
+        this.value = ''; // Xóa giá trị đã chọn
+    }
+});
 
 document.addEventListener('DOMContentLoaded', async () => {
     const childId = document.getElementById('childId').value;

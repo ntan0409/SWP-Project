@@ -1,0 +1,150 @@
+<div th:replace="~{header}"></div>
+
+<div class="container py-5">
+    <h2 class="text-center mb-4">Payment History</h2>
+    
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover" id="paymentTable">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Transaction ID</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="paymentTableBody">
+                        <!-- Data will be inserted here -->
+                    </tbody>
+                </table>
+                <div id="loadingSpinner" class="text-center d-none">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+                <div id="errorMessage" class="alert alert-danger d-none" role="alert">
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="text-center mt-4">
+        <a href="/home" class="btn btn-primary">
+            <i class="fas fa-home me-2"></i>Back to Home
+        </a>
+    </div>
+</div>
+
+<div th:replace="~{footer}"></div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    loadPaymentHistory();
+});
+
+function loadPaymentHistory() {
+    const tableBody = document.getElementById('paymentTableBody');
+    const spinner = document.getElementById('loadingSpinner');
+    const errorDiv = document.getElementById('errorMessage');
+
+    // Show loading spinner
+    spinner.classList.remove('d-none');
+    errorDiv.classList.add('d-none');
+
+    fetch('/api/payment/payment-history', {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        credentials: 'include' // Include cookies for authentication
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Failed to fetch payment history');
+        }
+        return response.json();
+    })
+    .then(transactions => {
+        tableBody.innerHTML = ''; // Clear existing content
+        
+        transactions.forEach(transaction => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${formatDateTime(transaction.paymentDate)}</td>
+                <td>${transaction.transactionRef}</td>
+                <td>${formatCurrency(transaction.amount)} VND</td>
+                <td>
+                    <span class="badge ${transaction.status === 'SUCCESS' ? 'bg-success' : 'bg-danger'}">
+                        ${transaction.status}
+                    </span>
+                </td>
+            `;
+            tableBody.appendChild(row);
+        });
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        errorDiv.textContent = 'Failed to load payment history. Please try again later.';
+        errorDiv.classList.remove('d-none');
+    })
+    .finally(() => {
+        spinner.classList.add('d-none');
+    });
+}
+
+function formatCurrency(amount) {
+    return new Intl.NumberFormat('vi-VN').format(amount);
+}
+
+function formatDateTime(dateTimeStr) {
+    if (!dateTimeStr) return '';
+    
+    // Extract date and time components
+    const year = dateTimeStr.substring(0, 4);
+    const month = dateTimeStr.substring(4, 6);
+    const day = dateTimeStr.substring(6, 8);
+    const hour = dateTimeStr.substring(8, 10);
+    const minute = dateTimeStr.substring(10, 12);
+    
+    return `${day}/${month}/${year} ${hour}:${minute}`;
+}
+</script>
+
+<style>
+.card {
+    border-radius: 15px;
+    border: none;
+}
+
+.table th {
+    background-color: #f8f9fa;
+    border-top: none;
+}
+
+.badge {
+    padding: 8px 12px;
+    border-radius: 6px;
+}
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.spinner-border {
+    width: 3rem;
+    height: 3rem;
+}
+
+.alert {
+    margin-top: 1rem;
+}
+</style> 

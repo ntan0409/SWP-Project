@@ -27,6 +27,17 @@
                         <div class="mb-4 form-floating">
                             <input type="password" class="form-control" id="floatingPassword" placeholder="Password" name="password" required>
                             <label for="floatingPassword">Password</label>
+                            <div id="error-password" class="invalid-feedback" style="display: none;"></div>
+                            <div class="password-requirements small text-muted mt-1">
+                                Password must contain:
+                                <ul class="mb-0">
+                                    <li id="length">At least 8 characters</li>
+                                    <li id="uppercase">At least 1 uppercase letter</li>
+                                    <li id="lowercase">At least 1 lowercase letter</li>
+                                    <li id="number">At least 1 number</li>
+                                    <li id="special">At least 1 special character</li>
+                                </ul>
+                            </div>
                         </div>
                         <div class="mb-4 form-floating">
                             <input type="password" class="form-control" id="floatingConfirmPassword" placeholder="Confirm Password" name="confirmPassword" required>
@@ -105,14 +116,60 @@
         }
     }
 
+    function validatePassword(password) {
+        const requirements = {
+            length: password.length >= 8,
+            uppercase: /[A-Z]/.test(password),
+            lowercase: /[a-z]/.test(password),
+            number: /[0-9]/.test(password),
+            special: /[!@#$%^&*(),.?":{}|<>]/.test(password)
+        };
+
+        // Update visual indicators
+        Object.keys(requirements).forEach(req => {
+            const element = document.getElementById(req);
+            if (element) {
+                if (requirements[req]) {
+                    element.style.color = 'green';
+                    element.innerHTML = `✓ ${element.innerHTML.replace('✓ ', '').replace('✗ ', '')}`;
+                } else {
+                    element.style.color = 'red';
+                    element.innerHTML = `✗ ${element.innerHTML.replace('✓ ', '').replace('✗ ', '')}`;
+                }
+            }
+        });
+
+        return Object.values(requirements).every(Boolean);
+    }
+
+    function checkPasswordStrength() {
+        const password = document.getElementById("floatingPassword").value;
+        const errorMessage = document.getElementById("error-password");
+        const isValid = validatePassword(password);
+
+        if (!isValid) {
+            errorMessage.style.display = "block";
+            errorMessage.innerText = "Password does not meet requirements";
+            document.getElementById("floatingPassword").classList.add("is-invalid");
+            return false;
+        } else {
+            errorMessage.style.display = "none";
+            document.getElementById("floatingPassword").classList.remove("is-invalid");
+            return true;
+        }
+    }
+
     document.getElementById("floatingUsername").addEventListener("input", (e) => checkAvailability("username", e.target.value));
     document.getElementById("floatingEmail").addEventListener("input", (e) => checkAvailability("email", e.target.value));
     document.getElementById("floatingPhone").addEventListener("input", (e) => checkAvailability("phone", e.target.value));
 
     // Kiểm tra mật khẩu và xác nhận mật khẩu khi người dùng nhập liệu
-    document.getElementById("floatingPassword").addEventListener("input", checkPasswordMatch);
-    document.getElementById("floatingConfirmPassword").addEventListener("input", checkPasswordMatch);
-
+    document.getElementById("floatingPassword").addEventListener("input", function() {
+        checkPasswordStrength();
+    });
+    document.getElementById("floatingConfirmPassword").addEventListener("input", function() {
+        checkPasswordMatch();
+    });
     // Kiểm tra các trường trước khi submit form
     document.querySelector("form").addEventListener("submit", async (e) => {
         e.preventDefault(); // Ngăn chặn gửi form

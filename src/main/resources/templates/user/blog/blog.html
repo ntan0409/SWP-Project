@@ -1,0 +1,112 @@
+<div th:replace="~{header}"></div>
+
+<header class="py-5 text-white border-bottom mb-4"
+        style="background: url('images/bg_blog.jpg') center/cover no-repeat;
+               min-height: 50vh; display: flex; align-items: center;
+               justify-content: center; text-align: center; background-attachment: fixed;">
+    <div class="container">
+        <div class="text-center my-5">
+            <h1 class="fw-bolder text-white">Welcome to Blog Home!</h1>
+        </div>
+    </div>
+</header>
+
+<div class="container">
+    <div class="row">
+        <div class="col-lg-8">
+            <div id="blog-list"></div> <!-- Nơi hiển thị danh sách blog -->
+        </div>
+
+        <div class="col-lg-4">
+            <!-- Search Widget -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-search"></i> Search</h5>
+                </div>
+                <div class="card-body">
+                    <input id="search-input" class="form-control" type="text" placeholder="Search title blogs..." />
+                    <button class="btn btn-primary mt-2" onclick="handleSearch()">Go!</button>
+                </div>
+            </div>
+
+            <!-- Categories widget -->
+            <div class="card mb-4">
+                <div class="card-header text-white">
+                    <h5 class="mb-0"><i class="fas fa-list-ul"></i> Categories</h5>
+                </div>
+                <div class="card-body">
+                    <div id="category-list" class="list-group"></div> <!-- Danh mục sẽ được tải từ API -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Thêm biến để lưu trữ state
+    let currentCategory = "";
+    let currentKeyword = "";
+
+    document.addEventListener("DOMContentLoaded", function () {
+        loadBlogs();
+        loadCategories();
+    });
+
+    function loadBlogs(category = currentCategory, keyword = currentKeyword) {
+        currentCategory = category;
+        currentKeyword = keyword;
+
+        let url = `/api/blogs?category=${currentCategory}&keyword=${currentKeyword}`;
+        fetch(url)
+            .then(response => response.json())
+            .then(blogs => {
+                let blogList = document.getElementById("blog-list");
+                blogList.innerHTML = "";
+                blogs.forEach(blog => {
+                    let blogItem = `
+                        <div class="card mb-4">
+                            <a href="/blog/${blog.id}">
+                                <!-- <img class="card-img-top" src="${blog.imageUrl}" alt="Blog Image" /> -->
+                            </a>
+                            <div class="card-body">
+                                <div class="small text-muted">${new Date(blog.createdAt).toLocaleDateString()}</div>
+                                <h2 class="card-title">${blog.title}</h2>
+                                <p class="blog-content">${blog.content.length > 200 ? blog.content.substring(0, 200) + "..." : blog.content}</p>
+                                <a class="btn btn-primary" href="/blog/${blog.id}">Read more →</a>
+                            </div>
+                        </div>`;
+                    blogList.innerHTML += blogItem;
+                });
+            })
+            .catch(error => console.error("Error loading blogs:", error));
+    }
+
+    function handleSearch() {
+        const searchKeyword = document.getElementById("search-input").value;
+        loadBlogs(currentCategory, searchKeyword);
+    }
+
+    function loadCategories() {
+        fetch("/api/blogs/categories")
+            .then(response => response.json())
+            .then(categories => {
+                let categoryList = document.getElementById("category-list");
+                categoryList.innerHTML = "";
+                categories.forEach(category => {
+                    let categoryItem = `<a href="#" class="list-group-item list-group-item-action ${category === currentCategory ? 'active' : ''}" 
+                        onclick="loadBlogs('${category}', currentKeyword)">${category}</a>`;
+                    categoryList.innerHTML += categoryItem;
+                });
+            })
+            .catch(error => console.error("Error loading categories:", error));
+    }
+
+    // Sửa lại event listener cho input search
+    document.getElementById("search-input").addEventListener("keypress", function (event) {
+        if (event.key === "Enter") {
+            handleSearch();
+        }
+    });
+</script>
+
+<div th:replace="~{footer}"></div>
