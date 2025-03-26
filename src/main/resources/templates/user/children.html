@@ -2,7 +2,11 @@
 
 <div class="container py-5">
     <input type="hidden" id="currentUserId" th:value="${currentUser.id}">
+<<<<<<< HEAD
     
+=======
+
+>>>>>>> a52f644b06137d8c6ba5ff80407f9e9b3c6f51b3
     <div class="row mb-5">
         <div class="col-md-12">
             <div class="d-flex justify-content-between align-items-center">
@@ -66,6 +70,7 @@
 </div>
 
 <script>
+<<<<<<< HEAD
 document.addEventListener('DOMContentLoaded', async () => {
     const userId = document.getElementById('currentUserId').value;
     await loadChildren(userId);
@@ -85,6 +90,27 @@ async function loadChildren(userId) {
             const childCard = document.createElement('div');
             childCard.className = 'col-md-4';
             childCard.innerHTML = `
+=======
+    document.addEventListener('DOMContentLoaded', async () => {
+        const userId = document.getElementById('currentUserId').value;
+        await loadChildren(userId);
+        await loadDoctors();
+    });
+
+    async function loadChildren(userId) {
+        try {
+            const response = await fetch(`/api/children?userId=${userId}`);
+            if (!response.ok) throw new Error('Failed to fetch children');
+            const children = await response.json();
+
+            const childrenList = document.getElementById('childrenList');
+            childrenList.innerHTML = '';
+
+            for (const child of children) {
+                const childCard = document.createElement('div');
+                childCard.className = 'col-md-4';
+                childCard.innerHTML = `
+>>>>>>> a52f644b06137d8c6ba5ff80407f9e9b3c6f51b3
                 <div class="card h-100 shadow-sm hover-card">
                     <div class="card-body p-4">
                         ${await renderChildHeader(child)}
@@ -122,6 +148,7 @@ async function loadChildren(userId) {
                     </div>
                 </div>
             `;
+<<<<<<< HEAD
             childrenList.appendChild(childCard);
         }
     } catch (error) {
@@ -248,6 +275,134 @@ async function getCompletedResponsesCount(childId) {
 async function renderChildHeader(child) {
     const responsesCount = await getCompletedResponsesCount(child.id);
     return `
+=======
+                childrenList.appendChild(childCard);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showError('Failed to load children');
+        }
+    }
+
+    async function deleteChild(id) {
+        if (!confirm('Are you sure you want to delete this child?')) return;
+
+        try {
+            const response = await fetch(`/api/children/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    [csrfHeader]: csrfToken
+                }
+            });
+
+            if (!response.ok) throw new Error('Failed to delete child');
+
+            showSuccess('Child deleted successfully');
+            const userId = document.getElementById('currentUserId').value;
+            await loadChildren(userId);
+        } catch (error) {
+            console.error('Error:', error);
+            showError('Failed to delete child');
+        }
+    }
+
+    function openShareModal(childId) {
+        document.getElementById('childIdForShare').value = childId;
+        const shareModal = new bootstrap.Modal(document.getElementById('shareModalTemplate'));
+        shareModal.show();
+    }
+
+    async function handleShareSubmit(event) {
+        event.preventDefault();
+        const form = event.target;
+        const childId = document.getElementById('childIdForShare').value;
+        const doctorId = form.doctorId.value;
+        console.log(doctorId);
+        console.log(childId);
+        const request = form.request.value;
+        console.log(request);
+        const memberId = document.getElementById('currentUserId').value;
+        console.log(memberId);
+        try {
+            const response = await fetch(`/api/consultations/create/${childId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    childId: childId,
+                    doctorId: doctorId,
+                    memberId: memberId,
+                    request: request,
+                    status: 'PENDING'
+                })
+            });
+
+            if (!response.ok) throw new Error('Failed to share with doctor');
+
+            showSuccess('Successfully shared with doctor');
+            bootstrap.Modal.getInstance(document.getElementById('shareModalTemplate')).hide();
+            form.reset();
+        } catch (error) {
+            console.error('Error:', error);
+            showError('Failed to share with doctor');
+        }
+    }
+
+    // Utility functions for showing notifications
+    function showSuccess(message) {
+        // Implement your success notification
+        alert(message); // Replace with your preferred notification system
+    }
+
+    function showError(message) {
+        // Implement your error notification
+        alert(message); // Replace with your preferred notification system
+    }
+
+    // CSRF setup
+    const csrfToken = document.querySelector("meta[name='_csrf']").getAttribute("content");
+    const csrfHeader = document.querySelector("meta[name='_csrf_header']").getAttribute("content");
+
+    // Thêm hàm để load doctors
+    async function loadDoctors() {
+        try {
+            const response = await fetch('/api/users/doctors');
+            if (!response.ok) throw new Error('Failed to fetch doctors');
+            const doctors = await response.json();
+
+            const doctorSelect = document.getElementById('doctorId');
+            doctors.forEach(doctor => {
+                const option = document.createElement('option');
+                option.value = doctor.id;
+                option.textContent = doctor.fullName;
+                doctorSelect.appendChild(option);
+            });
+        } catch (error) {
+            console.error('Error loading doctors:', error);
+            showNotification('Failed to load doctors list', 'danger');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadDoctors);
+
+    async function getCompletedResponsesCount(childId) {
+        try {
+            const response = await fetch(`/api/consultations/child/${childId}`);
+            if (!response.ok) throw new Error('Failed to fetch consultations');
+            const data = await response.json();
+            return data.completed.length;
+        } catch (error) {
+            console.error('Error:', error);
+            return 0;
+        }
+    }
+
+    async function renderChildHeader(child) {
+        const responsesCount = await getCompletedResponsesCount(child.id);
+        return `
+>>>>>>> a52f644b06137d8c6ba5ff80407f9e9b3c6f51b3
         <div class="d-flex justify-content-between align-items-start mb-4">
             <h4 class="card-title text-primary mb-0">${child.fullName}</h4>
             <div class="d-flex gap-2">
@@ -261,49 +416,54 @@ async function renderChildHeader(child) {
             </div>
         </div>
     `;
+<<<<<<< HEAD
 }
+=======
+    }
+>>>>>>> a52f644b06137d8c6ba5ff80407f9e9b3c6f51b3
 </script>
 
 <div th:replace="~{footer}"></div>
 
 <style>
-.hover-card {
-    transition: all 0.3s ease;
-    border: none;
-}
+    .hover-card {
+        transition: all 0.3s ease;
+        border: none;
+    }
 
-.hover-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
-}
+    .hover-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+    }
 
-.card-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-}
+    .card-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+    }
 
-.badge {
-    padding: 0.5rem 1rem;
-    font-weight: 500;
-    border-radius: 20px;
-}
+    .badge {
+        padding: 0.5rem 1rem;
+        font-weight: 500;
+        border-radius: 20px;
+    }
 
-.btn {
-    padding: 0.5rem 1rem;
-    border-radius: 8px;
-}
+    .btn {
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+    }
 
-.btn-outline-primary:hover,
-.btn-outline-secondary:hover,
-.btn-outline-danger:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
+    .btn-outline-primary:hover,
+    .btn-outline-secondary:hover,
+    .btn-outline-danger:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
 
-.text-muted {
-    color: #6c757d !important;
-}
+    .text-muted {
+        color: #6c757d !important;
+    }
 
+<<<<<<< HEAD
 .fw-medium {
     font-weight: 500;
 }
@@ -336,4 +496,38 @@ async function renderChildHeader(child) {
     background-color: var(--bs-primary);
     border-color: var(--bs-primary);
 }
+=======
+    .fw-medium {
+        font-weight: 500;
+    }
+
+    .btn-outline-success:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .modal-content {
+        border-radius: 12px;
+        border: none;
+    }
+
+    .modal-header {
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        padding: 1.5rem;
+    }
+
+    .modal-body {
+        padding: 1.5rem;
+    }
+
+    .form-control {
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+    }
+
+    .form-check-input:checked {
+        background-color: var(--bs-primary);
+        border-color: var(--bs-primary);
+    }
+>>>>>>> a52f644b06137d8c6ba5ff80407f9e9b3c6f51b3
 </style>

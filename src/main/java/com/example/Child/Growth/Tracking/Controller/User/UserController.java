@@ -41,7 +41,7 @@ public class UserController {
 
     @GetMapping
     public String profile(Model model) {
-        model.addAttribute("page", "profile"); 
+        model.addAttribute("page", "profile-update"); 
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     
