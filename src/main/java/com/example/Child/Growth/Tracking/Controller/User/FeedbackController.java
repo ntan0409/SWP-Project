@@ -35,7 +35,6 @@ public class FeedbackController {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
         User currentUser = userRepository.findByUsername(username).orElse(null);
-           
 
         model.addAttribute("currentUser",currentUser);
 

@@ -53,5 +53,8 @@ public class User {
     private String resetToken;
 
     @Column(nullable = true)
+    private String paymentStatus;
+    
+    @Column(nullable = true)
     private LocalDateTime resetTokenExpiry;
 }
