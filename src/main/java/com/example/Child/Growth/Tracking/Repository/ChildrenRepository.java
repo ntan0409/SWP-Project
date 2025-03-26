@@ -16,4 +16,5 @@ public interface ChildrenRepository extends JpaRepository<Children, Long> {
     Children findByFullName(String fullName);
     Children findByBirthDate(LocalDate birthDate);
     List<Children> findByUserId(Long userId);
+    int countByUserId(Long userId);
 }
