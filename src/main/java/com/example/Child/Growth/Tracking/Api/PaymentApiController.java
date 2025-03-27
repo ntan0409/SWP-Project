@@ -1,10 +1,13 @@
 package com.example.Child.Growth.Tracking.Api;
 
 import java.io.UnsupportedEncodingException;
+import java.util.Collections;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -54,6 +57,7 @@ public class PaymentApiController {
             return ResponseEntity.badRequest().body("Payment failed!");
         }
     }
+
     @GetMapping("/payment-history")
     public ResponseEntity<?> getPaymentHistory(Authentication authentication) {
         try {
@@ -84,6 +88,4 @@ public class PaymentApiController {
                 .body("Error fetching payment history: " + e.getMessage());
         }
     }
-
-    
 } 
