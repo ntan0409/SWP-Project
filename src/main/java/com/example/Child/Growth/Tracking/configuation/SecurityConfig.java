@@ -37,6 +37,7 @@ public class SecurityConfig {
                 .requestMatchers("/check-username", "/check-email", "/check-phone").permitAll()
                 .requestMatchers("/api/forgot-password/**").permitAll()
                 .requestMatchers("/forgot-password", "/register", "/login", "/home", "/blog/**", "/feedback/**", "/css/**", "/js/**", "/images/**", "/webfonts/**").permitAll()
+                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form
