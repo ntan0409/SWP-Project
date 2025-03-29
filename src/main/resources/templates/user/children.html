@@ -65,9 +65,34 @@
     </div>
 </div>
 
+<!-- Add Delete Confirmation Modal -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete this child?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
+// Add these variables at the top with other variables
+let deleteModal;
+let childToDelete;
+
+// Add this to your DOMContentLoaded event listener
 document.addEventListener('DOMContentLoaded', async () => {
     const userId = document.getElementById('currentUserId').value;
+    initializeDeleteModal();
     await loadChildren(userId);
     await loadDoctors();
 });
@@ -113,7 +138,7 @@ async function loadChildren(userId) {
                                    class="btn btn-outline-secondary flex-grow-1">
                                    <i class="fas fa-edit me-1"></i>Edit
                                 </a>
-                                <button onclick="deleteChild(${child.id})" 
+                                <button onclick="confirmDelete(${child.id})" 
                                         class="btn btn-outline-danger flex-grow-1">
                                     <i class="fas fa-trash me-1"></i>Delete
                                 </button>
@@ -126,28 +151,7 @@ async function loadChildren(userId) {
         }
     } catch (error) {
         console.error('Error:', error);
-        showError('Failed to load children');
-    }
-}
-
-async function deleteChild(id) {
-    if (!confirm('Are you sure you want to delete this child?')) return;
-    
-    try {
-        const response = await fetch(`/api/children/${id}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        });
-        
-        
-        showSuccess('Child deleted successfully');
-        const userId = document.getElementById('currentUserId').value;
-        await loadChildren(userId);
-    } catch (error) {
-        console.error('Error:', error);
-        showError('Failed to delete child');
+        showNotification('Failed to load children', 'danger');
     }
 }
 
@@ -155,6 +159,20 @@ function openShareModal(childId) {
     document.getElementById('childIdForShare').value = childId;
     const shareModal = new bootstrap.Modal(document.getElementById('shareModalTemplate'));
     shareModal.show();
+}
+
+function showNotification(message, type) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show notification`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(alertDiv);
+    
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 3000);
 }
 
 async function handleShareSubmit(event) {
@@ -185,24 +203,13 @@ async function handleShareSubmit(event) {
 
         if (!response.ok) throw new Error('Failed to share with doctor');
 
-        showSuccess('Successfully shared with doctor');
+        showNotification('Successfully shared with doctor', 'success');
         bootstrap.Modal.getInstance(document.getElementById('shareModalTemplate')).hide();
         form.reset();
     } catch (error) {
         console.error('Error:', error);
-        showError('Failed to share with doctor');
+        showNotification('Failed to share with doctor', 'danger');
     }
-}
-
-// Utility functions for showing notifications
-function showSuccess(message) {
-    // Implement your success notification
-    alert(message); // Replace with your preferred notification system
-}
-
-function showError(message) {
-    // Implement your error notification
-    alert(message); // Replace with your preferred notification system
 }
 
 // CSRF setup
@@ -259,6 +266,43 @@ async function renderChildHeader(child) {
             </div>
         </div>
     `;
+}
+
+// Add these new functions
+function initializeDeleteModal() {
+    deleteModal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+    
+    document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+        if (childToDelete) {
+            executeDelete(childToDelete);
+        }
+        deleteModal.hide();
+    });
+}
+
+function confirmDelete(id) {
+    childToDelete = id;
+    deleteModal.show();
+}
+
+async function executeDelete(id) {
+    try {
+        const response = await fetch(`/api/children/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+        
+        if (!response.ok) throw new Error('Failed to delete child');
+        
+        showNotification('Child deleted successfully', 'success');
+        const userId = document.getElementById('currentUserId').value;
+        await loadChildren(userId);
+    } catch (error) {
+        console.error('Error:', error);
+        showNotification('Failed to delete child', 'danger');
+    }
 }
 </script>
 
@@ -333,5 +377,64 @@ async function renderChildHeader(child) {
 .form-check-input:checked {
     background-color: var(--bs-primary);
     border-color: var(--bs-primary);
+}
+
+/* Add these Notification Styles */
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    min-width: 300px;
+    z-index: 1050;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+/* Add these Responsive Styles for notifications */
+@media (max-width: 768px) {
+    .notification {
+        width: 90%;
+        right: 5%;
+    }
+}
+
+/* Add these Animation Styles */
+.fade-enter {
+    opacity: 0;
+}
+
+.fade-enter-active {
+    opacity: 1;
+    transition: opacity 300ms ease-in;
+}
+
+/* Update Modal Styles */
+.modal-dialog {
+    max-width: 400px; /* Giảm độ rộng tối đa của modal */
+    margin: 1.75rem auto;
+}
+
+.modal-content {
+    border-radius: 8px; /* Giảm border radius */
+    border: none;
+}
+
+.modal-header {
+    padding: 1rem; /* Giảm padding */
+    border-bottom: 1px solid #dee2e6;
+}
+
+.modal-body {
+    padding: 1rem; /* Giảm padding */
+}
+
+.modal-footer {
+    padding: 0.75rem 1rem; /* Điều chỉnh padding */
+    border-top: 1px solid #dee2e6;
+}
+
+/* Điều chỉnh nút trong modal */
+.modal-footer .btn {
+    padding: 0.375rem 0.75rem; /* Giảm padding của nút */
+    font-size: 0.875rem; /* Giảm kích thước chữ */
 }
 </style>
